@@ -14,3 +14,10 @@ folder data:
 
 folder result:
     save result.
+
+TODO:
+- [ ] load data as .pcd format
+- [ ] add pcl processing operation
+- [ ] create folder and load image via opencv
+- [ ] add projected lidat pixels to image
+- [ ] add lidar segmentation operation

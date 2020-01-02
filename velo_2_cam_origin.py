@@ -2,14 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
 
-'''
-function:
-    (1) project lidar 
-numpy anglr is mearsured by pi rather than 360
-TODO: 
-    calibrate the lidar image with camera image
-    fit the dpi argument
-'''
 def lidar_to_2d_front_view(points,
                            rows,
                            v_res,
@@ -62,12 +54,7 @@ def lidar_to_2d_front_view(points,
     assert val in {"depth", "height", "reflectance"}, \
         'val must be one of {"depth", "height", "reflectance"}'
 
-    '''
-    x_lidar = points[:rows, 0]
-    y_lidar = points[:rows, 1]
-    z_lidar = points[:rows, 2]
-    r_lidar = points[:rows, 3] # Reflectance
-    '''
+
     rows = np.where([(points[:rows, 2]<-1.65) & (-1.75<points[:rows, 2])])
     x_lidar = points[rows, 0]
     y_lidar = points[rows, 1]
@@ -152,7 +139,7 @@ def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
     #rows = rows.reshape([-1, np.size(rows)])
     #rows = rows[0]
     rows = np.arange(120000)
-    print('\n points', len(rows),np.size(points,0), np.size(points,1))
+    print('\n points', len(rows), np.size(points,0), np.size(points,1))
     tmp = []
     coor3 = []
     coor2 = []
@@ -201,34 +188,7 @@ def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
    # print('\n tmp2', tmp2[:,2].max())
 
     return coor3, coor2
-'''
-def read_pc(mat):
-    x = mat[:, 2]  # x position of point
-    y = -mat[:, 1]  # y position of point
-    z = -mat[:, 0]  # z position of point
-    r = mat[:, 3]  # reflectance value of point
 
-    d = np.sqrt(x ** 2 + y ** 2)  # Map Distance from sensor
-    r_min = r.min()
-    r_dis = r.max() - r.min()
-    r_ = (r - r_min) / r_dis
-    r_ = np.array([i**2 for i in r_]) * 255
-    # return x,y,z,r_
-
-    fig = mayavi.mlab.figure(bgcolor=(0, 0, 0), size=(640, 500))
-    mayavi.mlab.points3d(x, y, z, r_,          # Values used for Color
-                        mode="point",
-                        colormap='spectral', # 'bone', 'copper', 'gnuplot'
-                        #color=(0, 1, 0),   # Used a fixed (r,g,b) instead
-                        figure=fig,
-                        )
-    
-    x=np.linspace(5,5,50)
-    y=np.linspace(0,0,50)
-    z=np.linspace(0,5,50)
-    mayavi.mlab.plot3d(x,y,z)
-    mayavi.mlab.show()
-'''
 
 if __name__ == "__main__":
     filename = "um_000000"
@@ -242,13 +202,7 @@ if __name__ == "__main__":
     VRES = 0.4          # vertical res
     VFOV = (-24.9, 2.0) # Field of view (-ve, +ve) along vertical axis
     Y_FUDGE = 5         # y fudge factor for velodyne HDL 64E
-    '''
-    matrix = []
-    with open(filename+".txt") as f:
-        for content in f.readlines()[2,4,5]:
-            digits = [i for i in content if str.isdigits(i)]
-            matrix.append("".join(digits))
-    '''
+
     proj_cam = [
     [7.215377000000e+02, 0.000000000000e+00, 6.095593000000e+02, 
     4.485728000000e+01],

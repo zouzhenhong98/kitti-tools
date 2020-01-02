@@ -1,6 +1,7 @@
 import numpy as np
 import pcl
 import pypcd
+import os
 
 # read calibrate parameters, return P2, R0, tr_vel_2_cam
 def read_calib(filename: str, line: list):    
@@ -23,10 +24,75 @@ def read_calib(filename: str, line: list):
 
 # read pointcloud data in .bin file, return python array
 def read_pointcloud(filename: str):
-    #pointcloud = np.fromfile(filename, dtype=np.float32, count=-1).reshape([-1,4])
-    #p = pcl.PointCloud(pointcloud)
-    pc = pypcd.PointCloud.from_path(filename)
-    return p,pc
+    if filename.endswith(".pcd"):
+        p = pcl.load(filename)
+    elif filename.endswith(".bin"):
+        p = np.fromfile(filename, dtype=np.float32, count=-1).reshape([-1,4])
+        p = array2pcd(p)
+    else:
+        raise ValueError("Only support .bin and .pcd format")
+    
+    return p
+
+
+# numpy to pcd
+def array2pcd(points,   # 4xN pointcloud array
+            VERSION="0.7",
+            FIELDS="x y z reflectence",
+            SIZE="4 4 4 4",
+            TYPE="F F F F",
+            COUNT="1 1 1 1",
+            WIDTH=None,
+            HEIGHT=None,
+            VIEWPOINT="0 0 0 1 0 0 0",
+            POINTS=None,    # value same as WIDTH
+            DATA="binary",  # binary or ascii
+            saveto=None  # save as .pcd
+            ):
+
+    '''
+    format illustration:
+        https://blog.csdn.net/david_xtd/article/details/36898955 
+        or 《点云库PCL从入门到精通》
+    '''
+
+    if saveto != None:
+        
+        xlist = points[0].tolist()
+        ylist = points[1].tolist()
+        zlist = points[2].tolist()
+        rlist = points[3].tolist()    # reflectence
+
+        # create file
+        if not os.path.exists(saveto):
+            f = open(saveto, 'w')
+            f.close()
+        
+        # write info
+        with open(saveto, 'w') as file_to_write:
+            file_to_write.writelines("# .PCD v0.7 - Point Cloud Data file format\n")
+            file_to_write.writelines("VERSION "+VERSION+"\n")
+            file_to_write.writelines("FIELDS "+FIELDS+"\n")
+            file_to_write.writelines("SIZE "+SIZE+"\n")
+            file_to_write.writelines("TYPE "+TYPE+"\n")
+            file_to_write.writelines("COUNT "+COUNT+"\n")
+            file_to_write.writelines("WIDTH " +str(len(xlist))+"\n")
+            file_to_write.writelines("HEIGHT 1\n")
+            file_to_write.writelines("VIEWPOINT "+VIEWPOINT+"\n")
+            file_to_write.writelines("POINTS "+str(len(xlist))+"\n")
+            file_to_write.writelines("DATA "+DATA+"\n")
+            for i in range(len(xlist)):
+                file_to_write.writelines(str(xlist[i]) + " " + str(ylist[i]) + " " + str(zlist[i]) + " " + str(rlist[i]) + "\n")
+            print("\nsuccessfully save to "+saveto)
+
+        # load .pcd
+        p = pcl.load(saveto)
+    
+    else:
+        '''return pcd.pointcloud from np.array, not complete pcd file'''
+        p = pcl.PointCloud(points.T)
+    
+    return p
 
 
 # load lidar pointcloud and project in 3-axis space using mayavi, return list
@@ -81,6 +147,9 @@ def read_img(filename: str):
 
 
 if __name__ == "__main__":
-    print('for test\n', read_calib('data/calib/um_000000.txt', [2,4,5]))
-    read_pc2array('data/bin/um_000000.bin',[-1.75,-1.55],True)
-    #read_pointcloud('data/bin/um_000000.bin')
+    test_file = 'um_000000'
+    #print('for test\n', read_calib('data/calib/'+test_file+'.txt', [2,4,5]))
+    data = read_pc2array('data/bin/'+test_file+'.bin',[-1.75,-1.55],True)
+    #read_pointcloud('data/bin/'+test_file+'.bin')
+    p = array2pcd(data, saveto='./data/pcd/'+test_file+'.pcd')
+

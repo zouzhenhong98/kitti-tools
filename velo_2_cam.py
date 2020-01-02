@@ -5,8 +5,9 @@ import data_provider
 import show_lidar
 import config
 #import pcl
-#import cv2 as cv
+import cv2 as cv
 
+#TODO: fix input to lidar_to_2d_front_view()
 
 # project lidar to camera-view image
 '''
@@ -123,16 +124,31 @@ def lidar_to_2d_front_view(points,
 
 
 
-def show_pixels(coor, saveto):
+def show_pixels(coor, saveto, imagepath=None):
+    '''load image'''
+    img = cv.imread("")
     dpi = 200
-    pixel_values = coor[:,2]
-    fig,ax = plt.subplots(figsize = (1242/dpi, 375/dpi), dpi = dpi)
-    ax.scatter(coor[:,0], -coor[:,1], s=1, c=pixel_values, linewidths=0, alpha=1, cmap='jet')
-    ax.set_facecolor((0, 0, 0))    # Set regions with no points to black
-    ax.axis('scaled')              # {equal, scaled}
-    ax.xaxis.set_visible(False)    # Do not draw axis tick marks
-    ax.yaxis.set_visible(False)    # Do not draw axis tick marks
-    fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
+    pixel_values = coor[3,:]
+    print(np.shape(coor))
+
+    if imagepath == None:    
+
+        fig,ax = plt.subplots(figsize = (1242/dpi, 375/dpi), dpi = dpi)
+        ax.scatter(coor[0,:], -coor[1,:], s=1, c=pixel_values, linewidths=0, alpha=1, cmap='jet')
+        ax.set_facecolor((0, 0, 0))    # Set regions with no points to black
+        ax.axis('scaled')              # {equal, scaled}
+        ax.xaxis.set_visible(False)    # Do not draw axis tick marks
+        ax.yaxis.set_visible(False)    # Do not draw axis tick marks
+        fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
+
+    else:
+        show_img(coor=coor,saveto=saveto)
+
+
+# add projected lidar to image and save
+def show_img(img_path, coor, saveto):
+    img = cv.imread(img_path)
+    return None
 
 
 # project lidar to camera-view and pixels
@@ -165,9 +181,14 @@ def lidar_to_camera_project(trans_mat,
     if you want to output coor1/coor2, please reindex [x,y,z]=>[-y',-z',x']
     '''
     coor = np.dot(trans_mat[:,:3], points)
+    for i in range(0,3):
+        coor[i,:] += trans_mat[i,3]
     coor = np.dot(rec_mat, coor)
     pixel = np.dot(cam_mat[:,:3], coor)
-    pixel = pixel[0:2] / pixel[2].sum() # [u,v] = [x,y] / z
+    pixel = pixel[0:2,:] / pixel[2,:].sum() # [u,v] = [x,y] / z
+
+    # reindex coor
+    coor = np.array([coor[2], -coor[0], -coor[1]])
     
     # add value to points
     coor = np.row_stack((coor,value))
@@ -176,11 +197,12 @@ def lidar_to_camera_project(trans_mat,
     # filter pixel according to image
     x_range = np.where(((pixel[0]>=0) & (pixel[0]<=pixel_range[0])))
     y_range = np.where(((pixel[0]>=0) & (pixel[0]<=pixel_range[1])))
-    intersection = np.intersect1d(x_range,y_range)
+    intersection = np.intersect1d(x_range, y_range)
     pixel = pixel[:,intersection]
-
-    print('\n pixel shape: ', np.shape(pixel))
-
+    
+    # print('\n pixel shape: ', np.shape(pixel))
+    # print(coor[0].max(),coor[0].min(),coor[1].max(),coor[1].min())
+    # print(pixel[0].max(),pixel[0].min(),pixel[1].max(),pixel[1].min())
     
     '''
     # function in detail
@@ -229,6 +251,7 @@ if __name__ == "__main__":
     filename = "um_000000"
     filepath = "./data/bin/"+filename+".bin"
     parampath = "./data/calib/"+filename+".txt"
+    imagepath = "./data/img/"+filename+".png"
     print('using data ',filename,' for test')
     
     '''
@@ -238,7 +261,7 @@ if __name__ == "__main__":
 
     # loar filtered pointcloud
     lidar = data_provider.read_pc2array(filepath, 
-                                        height=[-1.75,-1.55], 
+                                        height=None, #[-1.75,-1.55]
                                         font=True)
     lidar = np.array(lidar)
     print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
@@ -274,7 +297,10 @@ if __name__ == "__main__":
                                                 )
 
     # project pixels to figure
-    show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
+    show_pixels(coor=pixel, 
+                saveto="./result/vel2img_"+filename+".png",
+                imagepath=None #"./data/img/"+filename+".png"
+                )
 
     # from camera-view coordinates project to figure
     '''

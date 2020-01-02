@@ -31,9 +31,8 @@ def read_pointcloud(filename: str):
 
 # load lidar pointcloud and project in 3-axis space using mayavi, return list
 def read_pc2array(filename: str, 
-            height=None, # tuple
-            font=None    # bool
-            ):
+                    height=None, # tuple
+                    font=None):
     
     '''
     parameters:
@@ -82,5 +81,6 @@ def read_img(filename: str):
 
 
 if __name__ == "__main__":
-    #print('for test\n', read_calib('data/calib/um_000000.txt', [2,4,5]))
-    read_pointcloud('data/bin/um_000000.bin')
+    print('for test\n', read_calib('data/calib/um_000000.txt', [2,4,5]))
+    read_pc2array('data/bin/um_000000.bin',[-1.75,-1.55],True)
+    #read_pointcloud('data/bin/um_000000.bin')

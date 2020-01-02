@@ -233,7 +233,9 @@ def read_pc(mat):
 if __name__ == "__main__":
     filename = "um_000000"
     
-    lidar = np.fromfile(filename+".bin", dtype=np.float32, count=-1).reshape([-1,4])
+    lidar = np.fromfile("./data/bin/"+filename+".bin", 
+                        dtype=np.float32, 
+                        count=-1).reshape([-1,4])
 
     rows = 120000
     HRES = 0.35         # horizontal resolution (assuming 20Hz setting)

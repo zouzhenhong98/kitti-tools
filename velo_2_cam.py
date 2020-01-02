@@ -4,8 +4,8 @@ import mayavi.mlab
 import data_provider
 import show_lidar
 import config
-import pcl
-import cv2 as cv
+#import pcl
+#import cv2 as cv
 
 
 # project lidar to camera-view image
@@ -15,8 +15,7 @@ TODO:
     calibrate the lidar image with camera image
     fit the dpi argument
 '''
-def lidar_to_2d_front_view(points,  # 
-                           rows,
+def lidar_to_2d_front_view(points,
                            v_res,
                            h_res,
                            v_fov,
@@ -25,13 +24,15 @@ def lidar_to_2d_front_view(points,  #
                            saveto=None,
                            y_fudge=0.0
                            ):
-    """ Takes points in 3D space from LIDAR data and projects them to a 2D
+
+    """ 
+    Takes points in 3D space from LIDAR data and projects them to a 2D
         "front view" image, and saves that image.
 
         Supported image type: depth, height, reflectence
 
     Args:
-        points: (np array)
+        points: (np.array)
             The numpy array containing the lidar points.
             The shape should be Nx4
             - Where N is the number of points, and
@@ -67,21 +68,17 @@ def lidar_to_2d_front_view(points,  #
     assert val in {"depth", "height", "reflectance"}, \
         'val must be one of {"depth", "height", "reflectance"}'
 
-    '''
-    x_lidar = points[:rows, 0]
-    y_lidar = points[:rows, 1]
-    z_lidar = points[:rows, 2]
-    r_lidar = points[:rows, 3] # Reflectance
-    '''
-    rows = np.where([(points[:rows, 2]<-1.65) & (-1.75<points[:rows, 2])])
-    x_lidar = points[rows, 0]
-    y_lidar = points[rows, 1]
-    z_lidar = points[rows, 2]
-    r_lidar = points[rows, 3] # Reflectance
-    # Distance relative to origin when looked from top
-    d_lidar = np.sqrt(x_lidar ** 2 + y_lidar ** 2)
-    # Absolute distance relative to origin
-    D_lidar = np.sqrt(x_lidar ** 2 + y_lidar ** 2, z_lidar ** 2)
+    x_lidar = points[0,:]
+    y_lidar = points[1,:]
+    z_lidar = points[2,:]
+
+    # WHAT DATA TO USE TO ENCODE THE VALUE FOR EACH PIXEL
+    if val == "reflectance":
+        pixel_values = points[3,:]
+    elif val == "height":
+        pixel_values = points[4,:]
+    else:
+        pixel_values = points[5,:]
 
     v_fov_total = -v_fov[0] + v_fov[1]
 
@@ -91,7 +88,7 @@ def lidar_to_2d_front_view(points,  #
 
     # PROJECT INTO IMAGE COORDINATES, same as photo on the screen of Velodye
     x_img = np.arctan2(-y_lidar, x_lidar)/ h_res_rad # use -y due to Anticlockwise rotation 
-    y_img = np.arctan2(z_lidar, d_lidar)/ v_res_rad
+    y_img = np.arctan2(z_lidar, points[4,:])/ v_res_rad
 
     # SHIFT COORDINATES TO MAKE 0,0 THE MINIMUM
     x_min = -360.0 / h_res / 2  # Theoretical min x value based on sensor specs
@@ -105,14 +102,6 @@ def lidar_to_2d_front_view(points,  #
     y_max += y_fudge            # Fudge factor if the calculations based on
                                 # spec sheet do not match the range of
                                 # angles collected by in the data.
-
-    # WHAT DATA TO USE TO ENCODE THE VALUE FOR EACH PIXEL
-    if val == "reflectance":
-        pixel_values = r_lidar
-    elif val == "height":
-        pixel_values = z_lidar
-    else:
-        pixel_values = -D_lidar # originally d_lidar
 
     # PLOT THE IMAGE
     cmap = "jet"            # Color map to use
@@ -139,7 +128,7 @@ def show_pixels(coor, saveto):
     pixel_values = coor[:,2]
     fig,ax = plt.subplots(figsize = (1242/dpi, 375/dpi), dpi = dpi)
     ax.scatter(coor[:,0], -coor[:,1], s=1, c=pixel_values, linewidths=0, alpha=1, cmap='jet')
-    ax.set_facecolor((0, 0, 0)) # Set regions with no points to black
+    ax.set_facecolor((0, 0, 0))    # Set regions with no points to black
     ax.axis('scaled')              # {equal, scaled}
     ax.xaxis.set_visible(False)    # Do not draw axis tick marks
     ax.yaxis.set_visible(False)    # Do not draw axis tick marks
@@ -147,45 +136,70 @@ def show_pixels(coor, saveto):
 
 
 # project lidar to camera-view and pixels
-def lidar_to_camera_project(trans_mat, rec_mat, cam_mat, points):
+def lidar_to_camera_project(trans_mat, 
+                            rec_mat, 
+                            cam_mat, 
+                            data, 
+                            pixel_range
+                            ):
     
     '''
     parameters:
         trans_mat: from lidar-view to camera-view
         rec_mat: rectify camera-view
         cam_mat: from camera-view to pixelslidar_to_camera_project
-        points: you need data_provider.read_pc() for preprocess
+        data: you need data_provider.read_pc() for preprocess
+        pixel_range: tuple, the x,y axis range of pixel of image
     output:
         coor: rectified camera-view coordinates
         pixel: pixels projected from rectified camera-view
     '''
 
-    num = np.arange(np.size(points[0]))    # read num of points
-    coor1 = []
-    coor2 = []
+    coor = []
     pixel = []
-    points = points.T
+    points = data[:3,:] # coordinates
+    value = data[3:,:] # reflectence, dist2, dist3
 
-    # velodye to unrectified-cam, use height-filtered coordinates
-    coor1 = np.dot(trans_mat[:,:3], points)
-    coor2 = np.dot(coor)
     '''
+    velodye to unrectified-cam, use height-filtered coordinates
+    if you want to output coor1/coor2, please reindex [x,y,z]=>[-y',-z',x']
+    '''
+    coor = np.dot(trans_mat[:,:3], points)
+    coor = np.dot(rec_mat, coor)
+    pixel = np.dot(cam_mat[:,:3], coor)
+    pixel = pixel[0:2] / pixel[2].sum() # [u,v] = [x,y] / z
+    
+    # add value to points
+    coor = np.row_stack((coor,value))
+    pixel = np.row_stack((pixel,value))
+
+    # filter pixel according to image
+    x_range = np.where(((pixel[0]>=0) & (pixel[0]<=pixel_range[0])))
+    y_range = np.where(((pixel[0]>=0) & (pixel[0]<=pixel_range[1])))
+    intersection = np.intersect1d(x_range,y_range)
+    pixel = pixel[:,intersection]
+
+    print('\n pixel shape: ', np.shape(pixel))
+
+    
+    '''
+    # function in detail
+
+    num = np.arange(np.size(data[0]))    # read num of points
+
     for i in range(num):
         # if show in 3d-axis, [x,y,z]=[-y',-z',x']
         x = (points[i,:3] * trans_mat[0][:3]).sum() + trans_mat[0][3]
         y = (points[i,:3] * trans_mat[1][:3]).sum() + trans_mat[1][3]
         z = (points[i,:3] * trans_mat[2][:3]).sum() + trans_mat[2][3]
-        tmp.append([x,y,z])
-    tmp = np.array(tmp)
-    '''
-    print('\ntmp',np.size(tmp,0), np.size(tmp,1),tmp)
-    # read_pc(points[rows,:])
+        pixel.append([x,y,z])
+    pixel = np.array(pixel)
     
     # unrectified-cam to cam
     for i in range(len(rows)):
-        x = (tmp[i,:] * rec_mat[0][:3]).sum()
-        y = (tmp[i,:] * rec_mat[1][:3]).sum()
-        z = (tmp[i,:] * rec_mat[2][:3]).sum()
+        x = (pixel[i,:] * rec_mat[0][:3]).sum()
+        y = (pixel[i,:] * rec_mat[1][:3]).sum()
+        z = (pixel[i,:] * rec_mat[2][:3]).sum()
         coor.append([x,y,z,points[i,3]])
     coor = np.array(coor)
     
@@ -203,14 +217,7 @@ def lidar_to_camera_project(trans_mat, rec_mat, cam_mat, points):
             continue
         pixel.append([x,y,coor[i,3]])
     pixel = np.array(pixel)
-    print('\n pixel', np.size(pixel,0), np.size(pixel,1),pixel)
-    
-    # print height-filtered points
-    tmp2 = []
-    for i in rows:
-        tmp2.append([points[i,0],points[i,1],points[i,2],points[i,3]])
-    tmp2 = np.array(tmp2)
-   # print('\n tmp2', tmp2[:,2].max())
+    '''
 
     return coor, pixel
 
@@ -219,8 +226,9 @@ def lidar_to_camera_project(trans_mat, rec_mat, cam_mat, points):
 
 if __name__ == "__main__":
     
-    filename = "./data/bin/um_000000.bin"
-    params = "./data/calib/um_000000.txt"
+    filename = "um_000000"
+    filepath = "./data/bin/"+filename+".bin"
+    parampath = "./data/calib/"+filename+".txt"
     print('using data ',filename,' for test')
     
     '''
@@ -229,11 +237,14 @@ if __name__ == "__main__":
     '''
 
     # loar filtered pointcloud
-    lidar = data_provider.read_pc2array(filename, height=[-1.75,-1.55]) # type: list
+    lidar = data_provider.read_pc2array(filepath, 
+                                        height=[-1.75,-1.55], 
+                                        font=True)
     lidar = np.array(lidar)
     print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
-    param = data_provider.read_calib(params, [2,4,5]) # load parameters
+    param = data_provider.read_calib(parampath, [2,4,5])
 
+    '''
     # test pcl
     lidar = lidar[:3,:].T
     p = pcl.PointCloud(lidar)
@@ -241,7 +252,8 @@ if __name__ == "__main__":
     fil.set_mean_k (50)
     fil.set_std_dev_mul_thresh (1.0)
     fil.filter().to_file("inliers.pcd")
-    
+    '''
+
     # projection: pixels = cam2img * cam2cam * vel2cam * pointcloud
     # matrix type: np.array
     cam2img = param[0].reshape([3,4])   # from camera-view to pixels
@@ -254,15 +266,22 @@ if __name__ == "__main__":
     Y_FUDGE = config.Y_FUDGE    # y fudge factor for velodyne HDL 64E
     
     # get camera-view coordinates & pixel coordinates(after cam2img)
-    cam_coor, pixel = lidar_to_camera_project(vel2cam, cam2cam, cam2img, lidar)
+    cam_coor, pixel = lidar_to_camera_project(trans_mat=vel2cam, 
+                                                rec_mat=cam2cam, 
+                                                cam_mat=cam2img, 
+                                                data=lidar, 
+                                                pixel_range=(1242,375)
+                                                )
 
     # project pixels to figure
-    # show_pixels(pixel, "./vel2img_"+filename+".png")
+    show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
 
     # from camera-view coordinates project to figure
-    # lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./lidar_depth.png", y_fudge=Y_FUDGE)
+    '''
+    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
 
-    # lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="height", saveto="./lidar_height.png", y_fudge=Y_FUDGE)
+    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, val="height", saveto="./result/"+filename+"_height.png", y_fudge=Y_FUDGE)
 
-    # lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="reflectance", saveto="./lidar_reflectance.png", y_fudge=Y_FUDGE)
+    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, val="reflectance", saveto="./result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
+    '''
 

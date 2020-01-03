@@ -5,7 +5,7 @@ import data_provider
 import show_lidar
 import config
 #import pcl
-import cv2 as cv
+import cv2
 
 #TODO: fix input to lidar_to_2d_front_view()
 
@@ -126,7 +126,7 @@ def lidar_to_2d_front_view(points,
 
 def show_pixels(coor, saveto, imagepath=None):
     '''load image'''
-    img = cv.imread("")
+    img = cv2.imread("")
     dpi = 200
     pixel_values = coor[3,:]
     print(np.shape(coor))
@@ -146,9 +146,14 @@ def show_pixels(coor, saveto, imagepath=None):
 
 
 # add projected lidar to image and save
-def show_img(img_path, coor, saveto):
-    img = cv.imread(img_path)
-    return None
+def add_pc_to_img(img_path, coor, saveto=None):
+    img = data_provider.read_img(img_path)
+    for i in range(np.size(coor,1)):
+        img[int(coor[0,i]),int(coor[1,i])] = (0,0,0)  # only int accepted
+    if saveto==None:
+        cv2.imshow('compose',img)
+    else:
+        cv2.imwrite(saveto,img)
 
 
 # project lidar to camera-view and pixels
@@ -203,43 +208,6 @@ def lidar_to_camera_project(trans_mat,
     # print('\n pixel shape: ', np.shape(pixel))
     # print(coor[0].max(),coor[0].min(),coor[1].max(),coor[1].min())
     # print(pixel[0].max(),pixel[0].min(),pixel[1].max(),pixel[1].min())
-    
-    '''
-    # function in detail
-
-    num = np.arange(np.size(data[0]))    # read num of points
-
-    for i in range(num):
-        # if show in 3d-axis, [x,y,z]=[-y',-z',x']
-        x = (points[i,:3] * trans_mat[0][:3]).sum() + trans_mat[0][3]
-        y = (points[i,:3] * trans_mat[1][:3]).sum() + trans_mat[1][3]
-        z = (points[i,:3] * trans_mat[2][:3]).sum() + trans_mat[2][3]
-        pixel.append([x,y,z])
-    pixel = np.array(pixel)
-    
-    # unrectified-cam to cam
-    for i in range(len(rows)):
-        x = (pixel[i,:] * rec_mat[0][:3]).sum()
-        y = (pixel[i,:] * rec_mat[1][:3]).sum()
-        z = (pixel[i,:] * rec_mat[2][:3]).sum()
-        coor.append([x,y,z,points[i,3]])
-    coor = np.array(coor)
-    
-    # cam to image
-
-    for i in range(len(rows)):
-        z = (coor[i,:3] * cam_mat[2][:3]).sum()
-        if (z<0):
-            continue
-        x = (coor[i,:3] * cam_mat[0][:3]).sum() / z
-        if (x<0 or x>=1242):
-            continue
-        y = (coor[i,:3] * cam_mat[1][:3]).sum() / z
-        if (y<0 or y>=375):
-            continue
-        pixel.append([x,y,coor[i,3]])
-    pixel = np.array(pixel)
-    '''
 
     return coor, pixel
 
@@ -302,12 +270,17 @@ if __name__ == "__main__":
                 imagepath=None #"./data/img/"+filename+".png"
                 )
 
+    # add pixels to image
+    add_pc_to_img('./data/img/'+filename+'.png', coor=pixel, saveto='./result/test.png')
     # from camera-view coordinates project to figure
     '''
-    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
+    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, \
+        val="depth", saveto="./result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
 
-    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, val="height", saveto="./result/"+filename+"_height.png", y_fudge=Y_FUDGE)
+    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, \
+        val="height", saveto="./result/"+filename+"_height.png", y_fudge=Y_FUDGE)
 
-    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, val="reflectance", saveto="./result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
+    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, \
+        val="reflectance", saveto="./result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
     '''
 

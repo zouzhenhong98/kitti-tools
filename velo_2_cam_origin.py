@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
+import cv2
+import data_provider
 
 def lidar_to_2d_front_view(points,
                            rows,
@@ -128,6 +130,21 @@ def show_coor2(coor, saveto):
     fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
 
 
+def add_pc_to_img(img_path, coor, saveto=None, mask=True): 
+    # mask: only projected points reserve
+    img = data_provider.read_img(img_path)
+    if mask:
+        img[...] = 0
+    for i in range(np.size(coor,0)):
+        img[int(coor[i,1]),int(coor[i,0])] = (0,255,0)  # only int accepted
+    if saveto==None:
+        cv2.imshow('compose',img)
+    else:
+        cv2.imwrite(saveto,img)
+
+#def diff_img(old, new):
+#    for i in 
+
 def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
     '''
     project lidar to camera image
@@ -146,7 +163,6 @@ def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
 
     # velodye to unrectified-cam, use height-filtered coordinates
     for i in rows:
-        #index = 
         # if show, [x,y,z]=[-y',-z',x']
         x = (points[i,:3] * trans_mat[0][:3]).sum() + trans_mat[0][3]
         y = (points[i,:3] * trans_mat[1][:3]).sum() + trans_mat[1][3]
@@ -179,13 +195,6 @@ def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
         coor2.append([x,y,coor3[i,3]])
     coor2 = np.array(coor2)
     print('\n coor2', np.size(coor2,0), np.size(coor2,1),coor2)
-    
-    # print height-filtered points
-    tmp2 = []
-    for i in rows:
-        tmp2.append([points[i,0],points[i,1],points[i,2],points[i,3]])
-    tmp2 = np.array(tmp2)
-   # print('\n tmp2', tmp2[:,2].max())
 
     return coor3, coor2
 
@@ -223,7 +232,9 @@ if __name__ == "__main__":
     lidar, lidar_img = lidar_to_camera_project(tr_vel_2_cam, proj_cam, rec_cam, lidar, rows)
 
     # direct-trans image
-    show_coor2(lidar_img, "./velo2img_"+filename+".png")
+    # show_cooru2(lidar_img, "./velo2img_"+filename+".png")
+    #print(lidar_img[0,:].max(), lidar_img[0,:].min(), lidar_img[1,:].max(), lidar_img[1,:].min())
+    add_pc_to_img('./data/img/'+filename+'.png', coor=lidar_img, saveto='./result/test.png')
 
     # two-stage-trans image
     # lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./lidar_depth.png", y_fudge=Y_FUDGE)

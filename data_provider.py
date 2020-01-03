@@ -1,6 +1,6 @@
 import numpy as np
 import pcl
-import pypcd
+import cv2
 import os
 
 # read calibrate parameters, return P2, R0, tr_vel_2_cam
@@ -31,7 +31,7 @@ def read_pointcloud(filename: str):
         p = array2pcd(p)
     else:
         raise ValueError("Only support .bin and .pcd format")
-    
+
     return p
 
 
@@ -82,17 +82,19 @@ def array2pcd(points,   # 4xN pointcloud array
             file_to_write.writelines("POINTS "+str(len(xlist))+"\n")
             file_to_write.writelines("DATA "+DATA+"\n")
             for i in range(len(xlist)):
-                file_to_write.writelines(str(xlist[i]) + " " + str(ylist[i]) + " " + str(zlist[i]) + " " + str(rlist[i]) + "\n")
+                file_to_write.writelines(str(xlist[i]) + " " + str(ylist[i])\
+                     + " " + str(zlist[i]) + " " + str(rlist[i]) + "\n")
             print("\nsuccessfully save to "+saveto)
 
         # load .pcd
         p = pcl.load(saveto)
+        return p
     
     else:
         '''return pcd.pointcloud from np.array, not complete pcd file'''
         p = pcl.PointCloud(points.T)
-    
-    return p
+        print("\nload np.array as pcd format without info")
+        return p
 
 
 # load lidar pointcloud and project in 3-axis space using mayavi, return list
@@ -105,7 +107,8 @@ def read_pc2array(filename: str,
         filename: 
             path to load data
         height: 
-            the value indicates whether filtering from height, the tuple contains value of max_height and min_height, like[min, max]
+            the value indicates whether filtering from height, the tuple\
+                 contains value of max_height and min_height, like[min, max]
         font: 
             the value indicates whether filtering for font-view only
     output:
@@ -142,14 +145,15 @@ def read_pc2array(filename: str,
 
 # read image, return python array
 def read_img(filename: str):
-    pass
-
+    img = cv2.imread(filename)
+    return img
 
 
 if __name__ == "__main__":
     test_file = 'um_000000'
-    #print('for test\n', read_calib('data/calib/'+test_file+'.txt', [2,4,5]))
-    data = read_pc2array('data/bin/'+test_file+'.bin',[-1.75,-1.55],True)
-    #read_pointcloud('data/bin/'+test_file+'.bin')
-    p = array2pcd(data, saveto='./data/pcd/'+test_file+'.pcd')
+    # print('for test\n', read_calib('data/calib/'+test_file+'.txt', [2,4,5]))
+    # data = read_pc2array('data/bin/'+test_file+'.bin',[-1.75,-1.55],True)
+    # read_pointcloud('data/bin/'+test_file+'.bin')
+    # p = array2pcd(data, saveto='./data/pcd/'+test_file+'.pcd')
+    read_img('./data/img/'+test_file+'.png')
 

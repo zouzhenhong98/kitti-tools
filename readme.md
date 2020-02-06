@@ -18,6 +18,7 @@ folder result:
 TODO:
 - [x] load data as .pcd format
 - [ ] add pcl processing operation
-- [x] create folder and load image via opencv
-- [x] add projected lidat pixels to image
+- [x] create folder and load image via opencv-python
+- [x] add projected lidar pixels to image
 - [ ] add lidar segmentation operation
+- [ ] fix modified projection code

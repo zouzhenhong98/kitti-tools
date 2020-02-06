@@ -3,7 +3,7 @@ import mayavi.mlab
 import data_provider
 
 
-# project pointcloud to 3D axis
+# project pointcloud to 3D plane
 def show_pc(pointcloud: list,
              _type: str     # 'reflectence', 'distance' or 'depth'
              ):
@@ -12,14 +12,14 @@ def show_pc(pointcloud: list,
         pointcloud: data to project
         type: which value to be project
     '''
-    assert val in {"depth", "height", "reflectance"}, \
+    assert _type in {"depth", "height", "reflectance"}, \
                     'val must be one of {"depth", "height", "reflectance"}'
 
     x = pointcloud[0]
     y = pointcloud[1]
     z = pointcloud[2]
     
-    if _type=='reflectence':
+    if _type=='reflectance':
         value = pointcloud[3]
     if _type=='distance':
         value = pointcloud[4]
@@ -27,7 +27,7 @@ def show_pc(pointcloud: list,
         value = pointcloud[5]
 
     '''
-    # normalize value and translate to color range
+    # normalize the value in color range
     v_min = value.min()
     v_range = value.max() - v_min
     value = (value - v_min) / v_range
@@ -38,7 +38,7 @@ def show_pc(pointcloud: list,
     
     mayavi.mlab.points3d(x, y, z, value,          # Values used for Color
                         mode="point",
-                        colormap='spectral', # 'bone', 'copper', 'gnuplot'
+                        colormap='spectral', # bone, copper, gnuplot, spectral
                         #color=(0, 1, 0),   # Used a fixed (r,g,b) instead
                         figure=fig
                         )
@@ -53,5 +53,5 @@ def show_pc(pointcloud: list,
 if __name__ == "__main__":
     filename = "./data/bin/um_000000.bin"
     print(filename,' for test: \n')
-    data = data_provider.read_pc(filename) # , height=[-1.75,-1.55], font=True
-    show_pc(data, 'reflectence')
+    data = data_provider.read_pc2array(filename) # , height=[-1.75,-1.55], font=True
+    show_pc(data, "reflectance")

@@ -14,6 +14,7 @@ def lidar_to_2d_front_view(points,
                            saveto=None,
                            y_fudge=0.0
                            ):
+                           
     """ Takes points in 3D space from LIDAR data and projects them to a 2D
         "front view" image, and saves that image.
 
@@ -130,7 +131,7 @@ def show_coor2(coor, saveto):
     fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
 
 
-def add_pc_to_img(img_path, coor, saveto=None, mask=True): 
+def add_pc_to_img(img_path, coor, saveto=None, mask=False): 
     # mask: only projected points reserve
     img = data_provider.read_img(img_path)
     if mask:
@@ -138,9 +139,9 @@ def add_pc_to_img(img_path, coor, saveto=None, mask=True):
     for i in range(np.size(coor,0)):
         img[int(coor[i,1]),int(coor[i,0])] = (0,255,0)  # only int accepted
     if saveto==None:
-        cv2.imshow('compose',img)
+        cv2.imshow('compose', img)
     else:
-        cv2.imwrite(saveto,img)
+        cv2.imwrite(saveto, img)
 
 #def diff_img(old, new):
 #    for i in 

@@ -16,7 +16,7 @@ def lidar_to_2d_front_view(points,
                            ):
                            
     """ Takes points in 3D space from LIDAR data and projects them to a 2D
-        "front view" image, and saves that image.
+        "front view" image, and saves the image.
 
         Supported image type: depth, height, reflectence
 
@@ -143,8 +143,6 @@ def add_pc_to_img(img_path, coor, saveto=None, mask=False):
     else:
         cv2.imwrite(saveto, img)
 
-#def diff_img(old, new):
-#    for i in 
 
 def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
     '''
@@ -223,7 +221,7 @@ if __name__ == "__main__":
     tr_vel_2_cam = [7.533745000000e-03, -9.999714000000e-01, -6.166020000000e-04, -4.069766000000e-03, 1.480249000000e-02, 7.280733000000e-04, -9.998902000000e-01, -7.631618000000e-02, 9.998621000000e-01, 7.523790000000e-03, 1.480755000000e-02, -2.717806000000e-01]
 
     rec_cam = [
-    [9.999239000000e-01, 9.837760000000e-03, -7.445048000000e-03],[-9.869795000000e-03, 9.999421000000e-01, -4.278459000000e-03], [7.402527000000e-03, 4.351614000000e-03, 9.999631000000e-01],
+    [9.999239000000e-01, 9.837760000000e-03, -7.445048000000e-03],[-9.869795000000e-03, 9.999421000000e-01, -4.278459000000e-03], [7.402527000000e-03, 4.351614000000e-03, 9.999631000000e-01]
     ]
 
     y = lambda mat: np.array(mat).reshape([3,4]).tolist()
@@ -238,7 +236,7 @@ if __name__ == "__main__":
     add_pc_to_img('./data/img/'+filename+'.png', coor=lidar_img, saveto='./result/test.png')
 
     # two-stage-trans image
-    # lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./lidar_depth.png", y_fudge=Y_FUDGE)
+    #lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./lidar_depth.png", y_fudge=Y_FUDGE)
 
     # lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="height", saveto="./lidar_height.png", y_fudge=Y_FUDGE)
 

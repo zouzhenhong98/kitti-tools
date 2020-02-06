@@ -14,8 +14,10 @@ import cv2
 numpy anglr is mearsured by pi rather than 360
 TODO: 
     calibrate the lidar image with camera image
-    fit the dpi argument
+    fit the dpi problem
 '''
+
+# directly project pointclouds to 2d font-view without calibration
 def lidar_to_2d_front_view(points,
                            v_res,
                            h_res,
@@ -124,6 +126,7 @@ def lidar_to_2d_front_view(points,
 
 
 
+# show pixels via opencv
 def show_pixels(coor, saveto, imagepath=None):
     '''load image'''
     img = cv2.imread("")
@@ -156,7 +159,7 @@ def add_pc_to_img(img_path, coor, saveto=None):
         cv2.imwrite(saveto,img)
 
 
-# project lidar to camera-view and pixels
+# project lidar to camera-view coordinates and pixels
 def lidar_to_camera_project(trans_mat, 
                             rec_mat, 
                             cam_mat, 
@@ -169,7 +172,7 @@ def lidar_to_camera_project(trans_mat,
         trans_mat: from lidar-view to camera-view
         rec_mat: rectify camera-view
         cam_mat: from camera-view to pixelslidar_to_camera_project
-        data: you need data_provider.read_pc() for preprocess
+        data: use data_provider.read_pc2array() for preprocess
         pixel_range: tuple, the x,y axis range of pixel of image
     output:
         coor: rectified camera-view coordinates
@@ -179,7 +182,7 @@ def lidar_to_camera_project(trans_mat,
     coor = []
     pixel = []
     points = data[:3,:] # coordinates
-    value = data[3:,:] # reflectence, dist2, dist3
+    value = data[3:,:] # reflectance, dist2, dist3
 
     '''
     velodye to unrectified-cam, use height-filtered coordinates
@@ -223,8 +226,8 @@ if __name__ == "__main__":
     print('using data ',filename,' for test')
     
     '''
-    # you can also load pointcloud directly
-    lidar = data_provider.read_pointcloud(filename)
+    # you can also load pointcloud from bin to pcd
+    lidar = data_provider.read_pc2pcd(filepath)
     '''
 
     # loar filtered pointcloud
@@ -250,7 +253,7 @@ if __name__ == "__main__":
     cam2img = param[0].reshape([3,4])   # from camera-view to pixels
     cam2cam = param[1].reshape([3,3])   # rectify camera-view
     vel2cam = param[2].reshape([3,4])   # from lidar-view to camera-view
-    
+
     HRES = config.HRES          # horizontal resolution (assuming 20Hz setting)
     VRES = config.VRES          # vertical res
     VFOV = config.VFOV          # Field of view (-ve, +ve) along vertical axis
@@ -273,14 +276,16 @@ if __name__ == "__main__":
     # add pixels to image
     add_pc_to_img('./data/img/'+filename+'.png', coor=pixel, saveto='./result/test.png')
     # from camera-view coordinates project to figure
+    
     '''
-    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, \
+    # direct projection
+    lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
         val="depth", saveto="./result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
-
-    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, \
+    
+    lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
         val="height", saveto="./result/"+filename+"_height.png", y_fudge=Y_FUDGE)
 
-    lidar_to_2d_front_view(cam_coor, v_res=VRES, h_res=HRES, v_fov=VFOV, \
+    lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
         val="reflectance", saveto="./result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
     '''
 

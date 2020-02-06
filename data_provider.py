@@ -3,7 +3,6 @@ import pcl
 import cv2
 import os
 
-
 '''
 functions:
     read_calib
@@ -12,7 +11,6 @@ functions:
     read_pcd2array
     read_img
 '''
-
 
 # read calibrate parameters, return P2, R0, tr_vel_2_cam
 def read_calib(filename: str, line: list):    
@@ -33,8 +31,8 @@ def read_calib(filename: str, line: list):
     return mat
 
 
-# read pointcloud data in .bin file, return python array
-def read_pointcloud(filename: str):
+# read pointcloud data in .bin file, return python pcd
+def read_pc2pcd(filename: str):
     if filename.endswith(".pcd"):
         p = pcl.load(filename)
     elif filename.endswith(".bin"):
@@ -108,7 +106,7 @@ def array2pcd(points,   # 4xN pointcloud array
         return p
 
 
-# load lidar pointcloud and project in 3-axis space using mayavi, return list
+# load lidar pointcloud return list [x, y, z, r, dist2, dist3]
 def read_pc2array(filename: str, 
                     height=None, # tuple
                     font=None):
@@ -162,9 +160,10 @@ def read_img(filename: str):
 
 if __name__ == "__main__":
     test_file = 'um_000000'
-    # print('for test\n', read_calib('data/calib/'+test_file+'.txt', [2,4,5]))
+    # print(testfile + 'for test\n')
+    # param = read_calib('data/calib/'+test_file+'.txt', [2,4,5])
     # data = read_pc2array('data/bin/'+test_file+'.bin',[-1.75,-1.55],True)
-    # read_pointcloud('data/bin/'+test_file+'.bin')
+    # pcd = read_pc2pcd('data/bin/'+test_file+'.bin')
     # p = array2pcd(data, saveto='./data/pcd/'+test_file+'.pcd')
     read_img('./data/img/'+test_file+'.png')
 

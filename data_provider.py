@@ -3,6 +3,17 @@ import pcl
 import cv2
 import os
 
+
+'''
+functions:
+    read_calib
+    read_pointcloud
+    array2pcd
+    read_pcd2array
+    read_img
+'''
+
+
 # read calibrate parameters, return P2, R0, tr_vel_2_cam
 def read_calib(filename: str, line: list):    
     '''
@@ -105,7 +116,7 @@ def read_pc2array(filename: str,
     '''
     parameters:
         filename: 
-            path to load data
+            path to load data from .bin file
         height: 
             the value indicates whether filtering from height, the tuple\
                  contains value of max_height and min_height, like[min, max]

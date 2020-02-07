@@ -129,7 +129,7 @@ def lidar_to_2d_front_view(points,
 def show_pixels(coor, saveto):
     dpi = 200
     pixel_values = coor[2,:] # coor = [u,v,r,d2,d3]
-    print(max(pixel_values),min(pixel_values),len(pixel_values))
+    #print(max(pixel_values),min(pixel_values),len(pixel_values))
     fig,ax = plt.subplots(figsize = (1242/dpi, 375/dpi), dpi = dpi)
     ax.scatter(coor[0,:], -coor[1,:], s=1, c=pixel_values, linewidths=0, alpha=1, cmap='jet')
     # illustration of colormap(cmap): 
@@ -259,6 +259,21 @@ def lidar_to_camera_project(trans_mat,
 
 
 
+# read image to numpy then draw with matplotlib
+def plt_add_pc_to_img(img,lidar):
+    img = data_provider.read_img(img)
+    print(img.shape)
+
+    coor = pixel
+    color = coor[2,:]
+    tmp = np.zeros(img.shape[:2],dtype=np.uint8)
+    for i in range(np.size(coor,1)):
+        if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
+            img[int(coor[1,i]),int(coor[0,i])] = 1
+            img[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
+    plt.imshow(img)
+    plt.show()
+
 
 if __name__ == "__main__":
     
@@ -311,11 +326,13 @@ if __name__ == "__main__":
                                                 )
     
     # project pixels to figure
-    # show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
+    show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
     
 
     # add pixels to image
     add_pc_to_img(img_path='./data/img/'+filename+'.png', coor=pixel, saveto='./result/'+filename+'_composition.png')
+
+    # plt_add_pc_to_img(img='./data/img/'+filename+'.png',lidar=pixel)
     
     '''
     # direct projection

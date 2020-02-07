@@ -128,24 +128,19 @@ def lidar_to_2d_front_view(points,
 
 # show pixels via opencv
 def show_pixels(coor, saveto, imagepath=None):
-    '''load image'''
-    img = cv2.imread("")
     dpi = 200
-    pixel_values = coor[3,:]
-    print(np.shape(coor))
-
-    if imagepath == None:    
-
-        fig,ax = plt.subplots(figsize = (1242/dpi, 375/dpi), dpi = dpi)
-        ax.scatter(coor[0,:], -coor[1,:], s=1, c=pixel_values, linewidths=0, alpha=1, cmap='jet')
-        ax.set_facecolor((0, 0, 0))    # Set regions with no points to black
-        ax.axis('scaled')              # {equal, scaled}
-        ax.xaxis.set_visible(False)    # Do not draw axis tick marks
-        ax.yaxis.set_visible(False)    # Do not draw axis tick marks
-        fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
-
-    else:
-        show_img(coor=coor,saveto=saveto)
+    pixel_values = coor[2,:] # coor = [u,v,r,d2,d3]
+    print(max(pixel_values),min(pixel_values),len(pixel_values))
+    fig,ax = plt.subplots(figsize = (1242/dpi, 375/dpi), dpi = dpi)
+    ax.scatter(coor[0,:], -coor[1,:], s=1, c=pixel_values, linewidths=0, alpha=1, cmap='jet')
+    # illustration of colormap(cmap): 
+    # https://blog.csdn.net/lly1122334/article/details/88535217
+    ax.set_facecolor((0, 0, 0))    # Set regions with no points to black
+    ax.axis('scaled')              # {equal, scaled}
+    ax.xaxis.set_visible(False)    # Do not draw axis tick marks
+    ax.yaxis.set_visible(False)    # Do not draw axis tick marks
+    fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
+    print("image saved\n")     
 
 
 # add projected lidar to image and save
@@ -182,18 +177,18 @@ def lidar_to_camera_project(trans_mat,
     coor = []
     pixel = []
     points = data[:3,:] # coordinates
-    value = data[3:,:] # reflectance, dist2, dist3
+    value = data[3:,:] # reflectance, dist2d, dist3d
 
     '''
     velodye to unrectified-cam, use height-filtered coordinates
-    if you want to output coor1/coor2, please reindex [x,y,z]=>[-y',-z',x']
+    if you want to output coor1/coor2, reindex [x',y',z']=[z,-x,-y]
     '''
     coor = np.dot(trans_mat[:,:3], points)
     for i in range(0,3):
         coor[i,:] += trans_mat[i,3]
     coor = np.dot(rec_mat, coor)
     pixel = np.dot(cam_mat[:,:3], coor)
-    pixel = pixel[0:2,:] / pixel[2,:].sum() # [u,v] = [x,y] / z
+    pixel = pixel[0:2,:] / pixel[2,:] # [u,v] = [x,y] / z
 
     # reindex coor
     coor = np.array([coor[2], -coor[0], -coor[1]])
@@ -204,7 +199,7 @@ def lidar_to_camera_project(trans_mat,
 
     # filter pixel according to image
     x_range = np.where(((pixel[0]>=0) & (pixel[0]<=pixel_range[0])))
-    y_range = np.where(((pixel[0]>=0) & (pixel[0]<=pixel_range[1])))
+    y_range = np.where(((pixel[1]>=0) & (pixel[1]<=pixel_range[1])))
     intersection = np.intersect1d(x_range, y_range)
     pixel = pixel[:,intersection]
     
@@ -268,14 +263,10 @@ if __name__ == "__main__":
                                                 )
 
     # project pixels to figure
-    show_pixels(coor=pixel, 
-                saveto="./result/vel2img_"+filename+".png",
-                imagepath=None #"./data/img/"+filename+".png"
-                )
+    show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
 
     # add pixels to image
-    add_pc_to_img('./data/img/'+filename+'.png', coor=pixel, saveto='./result/test.png')
-    # from camera-view coordinates project to figure
+    #add_pc_to_img('./data/img/'+filename+'.png', coor=pixel, saveto='./result/test.png')
     
     '''
     # direct projection

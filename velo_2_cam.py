@@ -125,9 +125,8 @@ def lidar_to_2d_front_view(points,
         fig.show()
 
 
-
 # show pixels via opencv
-def show_pixels(coor, saveto, imagepath=None):
+def show_pixels(coor, saveto):
     dpi = 200
     pixel_values = coor[2,:] # coor = [u,v,r,d2,d3]
     print(max(pixel_values),min(pixel_values),len(pixel_values))
@@ -140,19 +139,68 @@ def show_pixels(coor, saveto, imagepath=None):
     ax.xaxis.set_visible(False)    # Do not draw axis tick marks
     ax.yaxis.set_visible(False)    # Do not draw axis tick marks
     fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
-    print("image saved\n")     
+    print("image saved\n") 
 
 
 # add projected lidar to image and save
 def add_pc_to_img(img_path, coor, saveto=None):
-    img = data_provider.read_img(img_path)
+    if img_path==None:
+        img = np.zeros((375,1242,3),dtype=np.uint8)
+    else:
+        img = data_provider.read_img(img_path)
+    color = coor[2,:]
+
+    '''
+    # normalization
+    color = (color - color.mean()) / color.std()
+    color = (color - color.min()) / (color.max() - color.min())
+    print(color.max(),color.min())
+    plt.hist(color)
+    plt.show()
+    '''
+    
+    '''
+    # pixel-wise operation
+    tmp = np.zeros(img.shape[:2],dtype=np.uint8)
     for i in range(np.size(coor,1)):
-        img[int(coor[0,i]),int(coor[1,i])] = (0,0,0)  # only int accepted
+        if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
+            img[int(coor[1,i]),int(coor[0,i])] = (color[i],color[i],color[i])
+            tmp[int(coor[1,i]),int(coor[0,i])] = 1
+    print(tmp.sum())
+    '''
+
+    # fuse two images
+
+    # create gray img
+    tmp = np.zeros(img.shape[:2],dtype=np.uint8)
+    for i in range(np.size(coor,1)):
+        if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
+            tmp[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
+
+    tmp_rgb = cv2.cvtColor(tmp, cv2.COLOR_GRAY2BGR)
+    tmp_rgb = cv2.cvtColor(tmp_rgb, cv2.COLOR_BGR2HSV)
+    #print(tmp_rgb.shape)
+    #plt.hist(tmp_rgb[:,:,2])
+    #plt.show()
+    #print(tmp_rgb)
+
+    '''
+    GRAY to COLOR: 
+        'COLOR_GRAY2BGR', 'COLOR_GRAY2BGR555', 'COLOR_GRAY2BGR565', 'COLOR_GRAY2BGRA', 'COLOR_GRAY2RGB', 'COLOR_GRAY2RGBA'
+    More options:
+        flags = [i for i in dir(cv2) if i.startswith('COLOR_')]
+        print(flags)
+    # numpy.ndarray to img
+    # tmp_rgb = cv2.merge([tmp,tmp,tmp])
+    '''
+    
+    img = cv2.addWeighted(img,0.1,tmp_rgb,0.9,0)
+
     if saveto==None:
         cv2.imshow('compose',img)
     else:
         cv2.imwrite(saveto,img)
-
+    
 
 # project lidar to camera-view coordinates and pixels
 def lidar_to_camera_project(trans_mat, 
@@ -261,12 +309,13 @@ if __name__ == "__main__":
                                                 data=lidar, 
                                                 pixel_range=(1242,375)
                                                 )
-
+    
     # project pixels to figure
-    show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
+    # show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
+    
 
     # add pixels to image
-    #add_pc_to_img('./data/img/'+filename+'.png', coor=pixel, saveto='./result/test.png')
+    add_pc_to_img(img_path='./data/img/'+filename+'.png', coor=pixel, saveto='./result/'+filename+'_composition.png')
     
     '''
     # direct projection

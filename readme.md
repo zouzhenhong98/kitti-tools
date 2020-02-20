@@ -21,4 +21,5 @@ TODO:
 - [x] create folder and load image via opencv-python
 - [x] add projected lidar pixels to image
 - [ ] add lidar segmentation operation
-- [ ] fix modified projection code
+- [x] fix modified projection code
+- [ ] add lidar estimation code: depth and reflectance

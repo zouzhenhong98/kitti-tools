@@ -173,6 +173,7 @@ def add_pc_to_img(img_path, coor, saveto=None):
 
     # create gray img
     tmp = np.zeros(img.shape[:2],dtype=np.uint8)
+    #print("max height: ",coor[1].min())#(,np.percentile(coor[1], 0))
     for i in range(np.size(coor,1)):
         if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
             tmp[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
@@ -194,7 +195,7 @@ def add_pc_to_img(img_path, coor, saveto=None):
     # tmp_rgb = cv2.merge([tmp,tmp,tmp])
     '''
     
-    img = cv2.addWeighted(img,.2,tmp_rgb,.8,0)
+    img = cv2.addWeighted(img,0,tmp_rgb,1,0)
 
     if saveto==None:
         cv2.imshow('compose',img)

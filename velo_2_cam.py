@@ -177,8 +177,8 @@ def add_pc_to_img(img_path, coor, saveto=None):
         if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
             tmp[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
 
-    tmp_rgb = cv2.cvtColor(tmp, cv2.COLOR_GRAY2BGR)
-    tmp_rgb = cv2.cvtColor(tmp_rgb, cv2.COLOR_BGR2HSV)
+    tmp_rgb = cv2.cvtColor(tmp, cv2.COLOR_GRAY2RGB)
+    #tmp_rgb = cv2.cvtColor(tmp_rgb, cv2.COLOR_BGR2HSV)
     #print(tmp_rgb.shape)
     #plt.hist(tmp_rgb[:,:,2])
     #plt.show()
@@ -194,7 +194,7 @@ def add_pc_to_img(img_path, coor, saveto=None):
     # tmp_rgb = cv2.merge([tmp,tmp,tmp])
     '''
     
-    img = cv2.addWeighted(img,0.1,tmp_rgb,0.9,0)
+    img = cv2.addWeighted(img,.2,tmp_rgb,.8,0)
 
     if saveto==None:
         cv2.imshow('compose',img)
@@ -258,7 +258,6 @@ def lidar_to_camera_project(trans_mat,
     return coor, pixel
 
 
-
 # read image to numpy then draw with matplotlib
 def plt_add_pc_to_img(img,lidar):
     img = data_provider.read_img(img)
@@ -278,23 +277,23 @@ def plt_add_pc_to_img(img,lidar):
 if __name__ == "__main__":
     
     filename = "um_000000"
-    filepath = "./data/bin/"+filename+".bin"
-    parampath = "./data/calib/"+filename+".txt"
-    imagepath = "./data/img/"+filename+".png"
+    pc_path = "./data/bin/"+filename+".bin"
+    calib_path = "./data/calib/"+filename+".txt"
+    image_path = "./data/img/"+filename+".png"
     print('using data ',filename,' for test')
     
     '''
     # you can also load pointcloud from bin to pcd
-    lidar = data_provider.read_pc2pcd(filepath)
+    lidar = data_provider.read_pc2pcd(pc_path)
     '''
 
     # loar filtered pointcloud
-    lidar = data_provider.read_pc2array(filepath, 
+    lidar = data_provider.read_pc2array(pc_path, 
                                         height=None, #[-1.75,-1.55]
                                         font=True)
     lidar = np.array(lidar)
     print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
-    param = data_provider.read_calib(parampath, [2,4,5])
+    param = data_provider.read_calib(calib_path, [2,4,5])
 
     '''
     # test pcl
@@ -326,13 +325,13 @@ if __name__ == "__main__":
                                                 )
     
     # project pixels to figure
-    show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
+    # show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
     
 
     # add pixels to image
-    add_pc_to_img(img_path='./data/img/'+filename+'.png', coor=pixel, saveto='./result/'+filename+'_composition.png')
+    add_pc_to_img(img_path=image_path, coor=pixel, saveto='./result/'+filename+'_composition.png')
 
-    # plt_add_pc_to_img(img='./data/img/'+filename+'.png',lidar=pixel)
+    # plt_add_pc_to_img(img=image_path, lidar=pixel)
     
     '''
     # direct projection

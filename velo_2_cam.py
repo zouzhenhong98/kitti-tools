@@ -275,6 +275,7 @@ def plt_add_pc_to_img(img,lidar):
     plt.show()
 
 
+
 if __name__ == "__main__":
     
     filename = "um_000000"
@@ -327,7 +328,6 @@ if __name__ == "__main__":
     
     # project pixels to figure
     # show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
-    
 
     # add pixels to image
     add_pc_to_img(img_path=image_path, coor=pixel, saveto='./result/'+filename+'_composition.png')

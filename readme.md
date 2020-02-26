@@ -23,4 +23,6 @@ TODO:
 - [ ] add lidar segmentation operation
 - [x] fix modified projection code
 - [ ] add lidar estimation code: depth and reflectance
-- [ ] complete diastance calculation for images
+- [x] complete diastance calculation for images
+- [x] add canny detecion for points
+- [ ] complete data_augmentation code

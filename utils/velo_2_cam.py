@@ -3,7 +3,7 @@ import numpy as np
 import mayavi.mlab
 import data_provider
 import show_lidar
-import utils.config as config
+import config
 #import pcl
 import cv2
 
@@ -279,9 +279,9 @@ def plt_add_pc_to_img(img,lidar):
 if __name__ == "__main__":
     
     filename = "um_000000"
-    pc_path = "./data/bin/"+filename+".bin"
-    calib_path = "./data/calib/"+filename+".txt"
-    image_path = "./data/img/"+filename+".png"
+    pc_path = "../data/bin/"+filename+".bin"
+    calib_path = "../data/calib/"+filename+".txt"
+    image_path = "../data/img/"+filename+".png"
     print('using data ',filename,' for test')
     
     '''
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     # show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
 
     # add pixels to image
-    add_pc_to_img(img_path=image_path, coor=pixel, saveto='./result/'+filename+'_composition.png')
+    add_pc_to_img(img_path=image_path, coor=pixel, saveto='../result/'+filename+'_composition.png')
 
     # plt_add_pc_to_img(img=image_path, lidar=pixel)
     

@@ -51,7 +51,7 @@ def show_pc(pointcloud: list,
 
 
 if __name__ == "__main__":
-    filename = "./data/bin/um_000000.bin"
+    filename = "../data/bin/um_000000.bin"
     print(filename,' for test: \n')
     data = data_provider.read_pc2array(filename) # , height=[-1.75,-1.55], font=True
     show_pc(data, "reflectance")

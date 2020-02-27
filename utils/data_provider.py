@@ -165,5 +165,5 @@ if __name__ == "__main__":
     # data = read_pc2array('data/bin/'+test_file+'.bin',[-1.75,-1.55],True)
     # pcd = read_pc2pcd('data/bin/'+test_file+'.bin')
     # p = array2pcd(data, saveto='./data/pcd/'+test_file+'.pcd')
-    read_img('./data/img/'+test_file+'.png')
+    read_img('../data/img/'+test_file+'.png')
 

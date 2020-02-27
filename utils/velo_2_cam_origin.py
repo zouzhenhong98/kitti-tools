@@ -201,7 +201,7 @@ def lidar_to_camera_project(trans_mat, cam_mat, rec_mat, points, rows):
 if __name__ == "__main__":
     filename = "um_000000"
     
-    lidar = np.fromfile("./data/bin/"+filename+".bin", 
+    lidar = np.fromfile("../data/bin/"+filename+".bin", 
                         dtype=np.float32, 
                         count=-1).reshape([-1,4])
 
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     # direct-trans image
     # show_cooru2(lidar_img, "./velo2img_"+filename+".png")
     #print(lidar_img[0,:].max(), lidar_img[0,:].min(), lidar_img[1,:].max(), lidar_img[1,:].min())
-    add_pc_to_img('./data/img/'+filename+'.png', coor=lidar_img, saveto='./result/test.png')
+    add_pc_to_img('../data/img/'+filename+'.png', coor=lidar_img, saveto='./result/test.png')
 
     # two-stage-trans image
     #lidar_to_2d_front_view(lidar, rows, v_res=VRES, h_res=HRES, v_fov=VFOV, val="depth", saveto="./lidar_depth.png", y_fudge=Y_FUDGE)

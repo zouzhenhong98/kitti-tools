@@ -1,19 +1,33 @@
-This is a package special for kitti data, temporally only support road-detetction channel data.
+### This is a package special for kitti data, 
+### including tasks for exploring-data-analysis, sparse-to-dense estimation,
+### road segmentation and lane line detection.
 
-data_provider:
-	read lidar and image data.
+-   subfolder and files illustration
 
-show_lidar:
-	project lidar pointclouds to panoramic images directly.
+-   kitti-tools
+├─ data                 [source data]
+│  ├─ bin               [lidar point clouds]
+│  ├─ calib             [calibration files]
+│  ├─ img               [RGB images]
+│  ├─ pcd               [generated pcd point clouds]
+│  └─ readme.md
+├─ dense_estimation     [sparse-to-dense estimation]
+│  └─ points_estimation.py
+├─ evaluation           [general evalutation code]
+│  └─ data_similarity.py
+├─ lane_detection       [lane line detection]
+├─ requirements.txt
+├─ result               [general results]
+├─ road_segmentation    [road segmentation]
+├─ utils                [general tools]
+│  ├─ canny.py
+│  ├─ config.py
+│  ├─ data_augmentation.py
+│  ├─ data_provider.py
+│  ├─ show_lidar.py
+│  ├─ velo_2_cam.py
+│  └─ velo_2_cam_origin.py
 
-velo_2_img:
-	transform lidar pointclouds to camera-view image, and save as .png.
-
-folder data:
-    save image, pointcoulds and calibrate file.
-
-folder result:
-    save result.
 
 TODO:
 - [x] load data as .pcd format

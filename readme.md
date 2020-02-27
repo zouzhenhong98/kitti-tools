@@ -4,29 +4,29 @@
 
 -   subfolder and files illustration
 
--   kitti-tools
-├─ data                 [source data]
-│  ├─ bin               [lidar point clouds]
-│  ├─ calib             [calibration files]
-│  ├─ img               [RGB images]
-│  ├─ pcd               [generated pcd point clouds]
-│  └─ readme.md
-├─ dense_estimation     [sparse-to-dense estimation]
-│  └─ points_estimation.py
-├─ evaluation           [general evalutation code]
-│  └─ data_similarity.py
-├─ lane_detection       [lane line detection]
-├─ requirements.txt
-├─ result               [general results]
-├─ road_segmentation    [road segmentation]
-├─ utils                [general tools]
-│  ├─ canny.py
-│  ├─ config.py
-│  ├─ data_augmentation.py
-│  ├─ data_provider.py
-│  ├─ show_lidar.py
-│  ├─ velo_2_cam.py
-│  └─ velo_2_cam_origin.py
+-   kitti-tools<br/>
+├─ data                 [source data]<br/>
+│  ├─ bin               [lidar point clouds]<br/>
+│  ├─ calib             [calibration files]<br/>
+│  ├─ img               [RGB images]<br/>
+│  ├─ pcd               [generated pcd point clouds]<br/>
+│  └─ readme.md<br/>
+├─ dense_estimation     [sparse-to-dense estimation]<br/>
+│  └─ points_estimation.py<br/>
+├─ evaluation           [general evalutation code]<br/>
+│  └─ data_similarity.py<br/>
+├─ lane_detection       [lane line detection]<br/>
+├─ requirements.txt<br/>
+├─ result               [general results]<br/>
+├─ road_segmentation    [road segmentation]<br/>
+├─ utils                [general tools]<br/>
+│  ├─ canny.py<br/>
+│  ├─ config.py<br/>
+│  ├─ data_augmentation.py<br/>
+│  ├─ data_provider.py<br/>
+│  ├─ show_lidar.py<br/>
+│  ├─ velo_2_cam.py<br/>
+│  └─ velo_2_cam_origin.py<br/>
 
 
 TODO:

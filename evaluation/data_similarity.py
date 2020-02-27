@@ -12,8 +12,8 @@ from numpy import average, linalg, dot
 
 ## cosin distance
 
-def get_thumbnail(image, size=(269, 1242), greyscale=True):
-    image = image.resize(size, Image.ANTIALIAS)
+def get_thumbnail(image, size=(100, 330), greyscale=True):
+    #image = image.resize(size, Image.ANTIALIAS)
     if greyscale:
         image = image.convert('L')
     return image
@@ -150,11 +150,13 @@ def useHASH(img1,img2):
  
 if __name__ == "__main__":
     
-    image1 = Image.open('../data/img/um_000000.png')
-    image2 = Image.open('../result/um_000000_composition.png')
-    # get Region of Interest(ROI)
-    img1 = image1.crop((0, 106, 1242, 375)) # (left, upper, right, lower)
-    img2 = image2.crop((0, 106, 1242, 375))
+    img1 = Image.open('../data/img/um_000000.png')
+    img2 = Image.open('../result/voxel_gray.png')
+    # resize and get Region of Interest(ROI)
+    img1 = img1.resize((100, 330),Image.ANTIALIAS)
+    img2 = img2.resize((100, 330),Image.ANTIALIAS)
+    img1 = img1.crop((0, 29, 330, 100)) # (left, upper, right, lower)
+    img2 = img2.crop((0, 29, 330, 100))
 
     # cosin distance
     cosin = image_similarity_vectors_via_numpy(img1, img2)

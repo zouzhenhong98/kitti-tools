@@ -1,6 +1,8 @@
+import sys
+sys.path.append("..")
 import numpy as np
 import mayavi.mlab
-import data_provider
+import utils.data_provider as data_provider
 
 
 # project pointcloud to 3D plane

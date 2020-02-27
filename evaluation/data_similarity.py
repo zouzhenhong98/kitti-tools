@@ -3,7 +3,8 @@ This code is implemented to calculate the similarity between images.
 Use cosin distance for image and point clouds 
 Use Hash distance + Histogram distance between images
 '''
-
+import sys
+sys.path.append("..")
 from PIL import Image
 import cv2
 from numpy import average, linalg, dot
@@ -149,8 +150,8 @@ def useHASH(img1,img2):
  
 if __name__ == "__main__":
     
-    image1 = Image.open('./data/img/um_000000.png')
-    image2 = Image.open('./result/um_000000_composition.png')
+    image1 = Image.open('../data/img/um_000000.png')
+    image2 = Image.open('../result/um_000000_composition.png')
     # get Region of Interest(ROI)
     img1 = image1.crop((0, 106, 1242, 375)) # (left, upper, right, lower)
     img2 = image2.crop((0, 106, 1242, 375))

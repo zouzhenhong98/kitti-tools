@@ -1,9 +1,11 @@
+import sys
+sys.path.append("..")
 import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
-import data_provider
-import show_lidar
-import config
+import utils.data_provider as data_provider
+import utils.show_lidar as show_lidar
+import utils.config as config
 #import pcl
 import cv2
 

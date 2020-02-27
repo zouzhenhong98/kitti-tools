@@ -1,8 +1,10 @@
+import sys
+sys.path.append("..")
 import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
 import cv2
-import data_provider
+import utils.data_provider as data_provider
 
 def lidar_to_2d_front_view(points,
                            rows,

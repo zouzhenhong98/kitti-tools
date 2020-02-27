@@ -3,7 +3,7 @@ import numpy as np
 import mayavi.mlab
 import data_provider
 import show_lidar
-import config
+import utils.config as config
 #import pcl
 import cv2
 

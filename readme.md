@@ -2,6 +2,8 @@
 ### including tasks for exploring-data-analysis, sparse-to-dense estimation,
 ### road segmentation and lane line detection.
 
+### to quickly get access to data, please use ./utils/data_provider.py or ./utils/velo_2_cam.py
+
 -   subfolder and files illustration
 
 -   kitti-tools<br/>

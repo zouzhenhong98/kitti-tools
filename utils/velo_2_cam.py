@@ -177,8 +177,9 @@ def add_pc_to_img(img_path, coor, saveto=None):
     tmp = np.zeros(img.shape[:2],dtype=np.uint8)
     #print("max height: ",coor[1].min())#(,np.percentile(coor[1], 0))
     for i in range(np.size(coor,1)):
-        if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
-            tmp[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
+        if int(coor[1,i])<img.shape[:2][0] and int(coor[0,i]) < img.shape[:2][1]:
+            if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
+                tmp[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
 
     tmp_rgb = cv2.cvtColor(tmp, cv2.COLOR_GRAY2RGB)
     #tmp_rgb = cv2.cvtColor(tmp_rgb, cv2.COLOR_BGR2HSV)
@@ -277,37 +278,14 @@ def plt_add_pc_to_img(img,lidar):
     plt.show()
 
 
-
-if __name__ == "__main__":
-    
-    filename = "um_000000"
-    pc_path = "../data/bin/"+filename+".bin"
-    calib_path = "../data/calib/"+filename+".txt"
-    image_path = "../data/img/"+filename+".png"
-    print('using data ',filename,' for test')
-    
-    '''
-    # you can also load pointcloud from bin to pcd
-    lidar = data_provider.read_pc2pcd(pc_path)
-    '''
-
-    # loar filtered pointcloud
-    lidar = data_provider.read_pc2array(pc_path, 
-                                        height=None, #[-1.75,-1.55]
+def test_projection(pc, calib, img, save_to, filter_height, show, add):
+     # loar filtered pointcloud
+    lidar = data_provider.read_pc2array(pc, 
+                                        height=filter_height, #[-1.75,-1.55]
                                         font=True)
     lidar = np.array(lidar)
-    print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
-    param = data_provider.read_calib(calib_path, [2,4,5])
-
-    '''
-    # test pcl
-    lidar = lidar[:3,:].T
-    p = pcl.PointCloud(lidar)
-    fil = p.make_statistical_outlier_filter()
-    fil.set_mean_k (50)
-    fil.set_std_dev_mul_thresh (1.0)
-    fil.filter().to_file("inliers.pcd")
-    '''
+    # print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
+    param = data_provider.read_calib(calib, [2,4,5])
 
     # projection: pixels = cam2img * cam2cam * vel2cam * pointcloud
     # matrix type: np.array
@@ -329,10 +307,37 @@ if __name__ == "__main__":
                                                 )
     
     # project pixels to figure
-    # show_pixels(coor=pixel, saveto="../result/vel2img_"+filename+".png")
+    if show:
+        show_pixels(coor=pixel, saveto=save_to+"vel2img_"+img[:-4]+".png")
 
     # add pixels to image
-    add_pc_to_img(img_path=image_path, coor=pixel, saveto='../result/'+filename+'_composition2.png')
+    if add:
+        add_pc_to_img(img_path=img, coor=pixel, saveto=save_to+img[:-4]+'_composition2.png')
+
+
+
+if __name__ == "__main__":
+    
+    filename = "um_000000"
+    pc_path = "../data/bin/"+filename+".bin"
+    calib_path = "../data/calib/"+filename+".txt"
+    image_path = "../data/img/"+filename+".png"
+    print('using data ',filename,' for test')
+    
+    '''
+    # you can also load pointcloud from bin to pcd
+    lidar = data_provider.read_pc2pcd(pc_path)
+
+    # test pcl
+    lidar = lidar[:3,:].T
+    p = pcl.PointCloud(lidar)
+    fil = p.make_statistical_outlier_filter()
+    fil.set_mean_k (50)
+    fil.set_std_dev_mul_thresh (1.0)
+    fil.filter().to_file("inliers.pcd")
+    '''
+
+    test_projection(pc=pc_path, calib=calib_path, img=image_path, save_to='../result/', filter_height=None, show=True, add=True)
 
     # plt_add_pc_to_img(img=image_path, lidar=pixel)
     

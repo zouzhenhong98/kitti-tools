@@ -9,22 +9,25 @@ from utils import config
 import cv2
 import pcl 
 
+# referrence:  
+# python-pcl/tests/test_sampleconsensus.py 
+# python-pcl/examples/official/Segmentation/Plane_model_segmentation.py 
 def ransac(points_):
     points = points_[:3].T
     cloud = pcl.PointCloud()
     cloud.from_array(points)
 
     print('Point cloud data: ' + str(cloud.size) + ' points')
-    for i in range(0, cloud.size):
-        print('x: ' + str(cloud[i][0]) + ', y : ' +
-              str(cloud[i][1]) + ', z : ' + str(cloud[i][2]))
+    # for i in range(0, cloud.size):
+    #     print('x: ' + str(cloud[i][0]) + ', y : ' +
+    #           str(cloud[i][1]) + ', z : ' + str(cloud[i][2]))
 
     seg = cloud.make_segmenter_normals(ksearch=50)
     seg.set_optimize_coefficients(True)
     seg.set_model_type(pcl.SACMODEL_NORMAL_PLANE)
     seg.set_method_type(pcl.SAC_RANSAC)
-    seg.set_distance_threshold(0.06)    # threshold
-    seg.set_normal_distance_weight(0.1)
+    seg.set_distance_threshold(0.07)    # threshold * 3
+    seg.set_normal_distance_weight(0.05)
     seg.set_max_iterations(1000)
     indices, coefficients = seg.segment()
 
@@ -33,7 +36,13 @@ def ransac(points_):
         exit(0)
 
     print('Model inliers: ' + str(len(indices)))
-    return points_[:,indices]
+    H = points_[2,indices].max()
+    h = points_[2,indices].min()
+    # m = np.median(points_[2,indices])
+    # return [H,h,H-h,m]
+    z = np.array(points_[2,:])
+    indices = np.argwhere(z <= max(H,-1.4))
+    return points_[:,indices[:,0]]
 
 if __name__ == "__main__":
     
@@ -49,30 +58,31 @@ if __name__ == "__main__":
                                         font=True)
     lidar = np.array(lidar)
     lidar = ransac(lidar)   # filter with RANSAC
-    print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
-    param = data_provider.read_calib(calib_path, [2,4,5])
+    print(lidar)
+    # print('\nfiltered pointcloud size: ', (np.size(lidar,1), np.size(lidar,0)))
+    # param = data_provider.read_calib(calib_path, [2,4,5])
 
-    # projection: pixels = cam2img * cam2cam * vel2cam * pointcloud
-    # matrix type: np.array
-    cam2img = param[0].reshape([3,4])   # from camera-view to pixels
-    cam2cam = param[1].reshape([3,3])   # rectify camera-view
-    vel2cam = param[2].reshape([3,4])   # from lidar-view to camera-view
+    # # projection: pixels = cam2img * cam2cam * vel2cam * pointcloud
+    # # matrix type: np.array
+    # cam2img = param[0].reshape([3,4])   # from camera-view to pixels
+    # cam2cam = param[1].reshape([3,3])   # rectify camera-view
+    # vel2cam = param[2].reshape([3,4])   # from lidar-view to camera-view
 
-    HRES = config.HRES          # horizontal resolution (assuming 20Hz setting)
-    VRES = config.VRES          # vertical res
-    VFOV = config.VFOV          # Field of view (-ve, +ve) along vertical axis
-    Y_FUDGE = config.Y_FUDGE    # y fudge factor for velodyne HDL 64E
+    # HRES = config.HRES          # horizontal resolution (assuming 20Hz setting)
+    # VRES = config.VRES          # vertical res
+    # VFOV = config.VFOV          # Field of view (-ve, +ve) along vertical axis
+    # Y_FUDGE = config.Y_FUDGE    # y fudge factor for velodyne HDL 64E
     
-    # get camera-view coordinates & pixel coordinates(after cam2img)
-    cam_coor, pixel = velo_2_cam.lidar_to_camera_project(trans_mat=vel2cam, 
-                                                        rec_mat=cam2cam, 
-                                                        cam_mat=cam2img, 
-                                                        data=lidar, 
-                                                        pixel_range=(1242,375)
-                                                        )
+    # # get camera-view coordinates & pixel coordinates(after cam2img)
+    # cam_coor, pixel = velo_2_cam.lidar_to_camera_project(trans_mat=vel2cam, 
+    #                                                     rec_mat=cam2cam, 
+    #                                                     cam_mat=cam2img, 
+    #                                                     data=lidar, 
+    #                                                     pixel_range=(1242,375)
+    #                                                     )
     
-    # project pixels to figure
-    velo_2_cam.show_pixels(coor=pixel, saveto="../result/ransac_"+filename+".png")
+    # # project pixels to figure
+    # velo_2_cam.show_pixels(coor=pixel, saveto="../result/ransac_"+filename+".png")
 
-    # add pixels to image
-    velo_2_cam.add_pc_to_img(img_path=image_path, coor=pixel, saveto='../result/ransac_'+filename+'_composition2.png')
+    # # add pixels to image
+    # velo_2_cam.add_pc_to_img(img_path=image_path, coor=pixel, saveto='../result/ransac_'+filename+'_composition2.png')

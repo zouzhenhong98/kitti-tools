@@ -3,9 +3,9 @@ sys.path.append("..")
 import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
-import utils.data_provider as data_provider
-import utils.show_lidar as show_lidar
-import utils.config as config
+from utils import data_provider
+from utils import show_lidar
+from utils import config
 #import pcl
 import cv2
 
@@ -197,7 +197,7 @@ def add_pc_to_img(img_path, coor, saveto=None):
     # tmp_rgb = cv2.merge([tmp,tmp,tmp])
     '''
     
-    img = cv2.addWeighted(img,0,tmp_rgb,1,0)
+    img = cv2.addWeighted(img,.8,tmp_rgb,2,0)
 
     if saveto==None:
         cv2.imshow('compose',img)
@@ -329,22 +329,22 @@ if __name__ == "__main__":
                                                 )
     
     # project pixels to figure
-    # show_pixels(coor=pixel, saveto="./result/vel2img_"+filename+".png")
+    # show_pixels(coor=pixel, saveto="../result/vel2img_"+filename+".png")
 
     # add pixels to image
-    add_pc_to_img(img_path=image_path, coor=pixel, saveto='../result/'+filename+'_composition.png')
+    add_pc_to_img(img_path=image_path, coor=pixel, saveto='../result/'+filename+'_composition2.png')
 
     # plt_add_pc_to_img(img=image_path, lidar=pixel)
     
     '''
     # direct projection
     lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
-        val="depth", saveto="./result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
+        val="depth", saveto="../result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
     
     lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
-        val="height", saveto="./result/"+filename+"_height.png", y_fudge=Y_FUDGE)
+        val="height", saveto="../result/"+filename+"_height.png", y_fudge=Y_FUDGE)
 
     lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
-        val="reflectance", saveto="./result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
+        val="reflectance", saveto="../result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
     '''
 

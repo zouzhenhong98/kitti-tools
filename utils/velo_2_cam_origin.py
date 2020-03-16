@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
 import cv2
-import utils.data_provider as data_provider
+from utils import data_provider
 
 def lidar_to_2d_front_view(points,
                            rows,

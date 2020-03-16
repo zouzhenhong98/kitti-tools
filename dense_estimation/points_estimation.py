@@ -4,8 +4,8 @@ work for both depth and reflectance.
 '''
 import sys
 sys.path.append("..")
-import utils.data_provider as data_provider
-import utils.velo_2_cam as velo_2_cam
+from utils import data_provider
+from utils import velo_2_cam
 import numpy as np
 
 # fetch image and point clouds: coordinates and reflectance

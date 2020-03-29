@@ -36,9 +36,9 @@ TODO:
 - [ ] add pcl processing operation
 - [x] create folder and load image via opencv-python
 - [x] add projected lidar pixels to image
-- [ ] add lidar segmentation operation
 - [x] fix modified projection code
-- [ ] add lidar estimation code: depth and reflectance
+- [ ] add lidar estimation code: reflectance
 - [x] complete diastance calculation for images
 - [x] add canny detecion for points
 - [ ] complete data_augmentation code
+- [x] add road segmentation with RANSAC on point clouds

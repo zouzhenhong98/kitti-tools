@@ -150,8 +150,10 @@ def add_pc_to_img(img_path, coor, saveto=None):
         img = np.zeros((375,1242,3),dtype=np.uint8)
     else:
         img = data_provider.read_img(img_path)
-    color = coor[2,:]
-
+    color1 = coor[2,:]*0.299
+    color2 = coor[2,:]*0.587
+    color3 = coor[2,:]*0.114
+    # 0.299, 0.587, 0.114
     '''
     # normalization
     color = (color - color.mean()) / color.std()
@@ -174,15 +176,19 @@ def add_pc_to_img(img_path, coor, saveto=None):
     # fuse two images
 
     # create gray img
-    tmp = np.zeros(img.shape[:2],dtype=np.uint8)
+    tmp = np.zeros(img.shape[:],dtype=np.uint8)
     #print("max height: ",coor[1].min())#(,np.percentile(coor[1], 0))
     for i in range(np.size(coor,1)):
         if int(coor[1,i])<img.shape[:2][0] and int(coor[0,i]) < img.shape[:2][1]:
-            if tmp[int(coor[1,i]),int(coor[0,i])] == 0:
-                tmp[int(coor[1,i]),int(coor[0,i])] = int(color[i] * 255)
+            if tmp[int(coor[1,i]),int(coor[0,i]),0] == 0:
+                tmp[int(coor[1,i]),int(coor[0,i]),0] = int(color1[i] * 255)
+                tmp[int(coor[1,i]),int(coor[0,i]),1] = int(color2[i] * 255)
+                tmp[int(coor[1,i]),int(coor[0,i]),2] = int(color3[i] * 255)
+    
 
-    tmp_rgb = cv2.cvtColor(tmp, cv2.COLOR_GRAY2RGB)
-    #tmp_rgb = cv2.cvtColor(tmp_rgb, cv2.COLOR_BGR2HSV)
+    #tmp_rgb = cv2.cvtColor(tmp, cv2.COLOR_GRAY2RGB)
+    #print(tmp_rgb)
+    #tmp = cv2.cvtColor(tmp, cv2.COLOR_RGB2HSV)
     #print(tmp_rgb.shape)
     #plt.hist(tmp_rgb[:,:,2])
     #plt.show()
@@ -198,12 +204,21 @@ def add_pc_to_img(img_path, coor, saveto=None):
     # tmp_rgb = cv2.merge([tmp,tmp,tmp])
     '''
     
-    img = cv2.addWeighted(img,.8,tmp_rgb,2,0)
-
+    img = cv2.addWeighted(img,0.,tmp,1,0)
+    #img = img.transpose((1, 2, 0))    # transpose (C, H, W) -> (H, W, C)
+    # 之后便可正常显示图片
+    print('save')
+    plt.figure("Image")
+    plt.imshow(img)
+    plt.show()
+    #plt.savefig(saveto)
+    '''
+    print(img.shape)
     if saveto==None:
         cv2.imshow('compose',img)
     else:
         cv2.imwrite(saveto,img)
+    '''
     
 
 # project lidar to camera-view coordinates and pixels
@@ -308,11 +323,11 @@ def test_projection(pc, calib, img, save_to, filter_height, show, add):
     
     # project pixels to figure
     if show:
-        show_pixels(coor=pixel, saveto=save_to+"vel2img_"+img[:-4]+".png")
+        show_pixels(coor=pixel, saveto=save_to+"vel2img_"+img[12:-4]+".png")
 
     # add pixels to image
     if add:
-        add_pc_to_img(img_path=img, coor=pixel, saveto=save_to+img[:-4]+'_composition2.png')
+        add_pc_to_img(img_path=img, coor=pixel, saveto=save_to+img[12:-4]+'_composition2.png')
 
 
 
@@ -337,7 +352,7 @@ if __name__ == "__main__":
     fil.filter().to_file("inliers.pcd")
     '''
 
-    test_projection(pc=pc_path, calib=calib_path, img=image_path, save_to='../result/', filter_height=None, show=True, add=True)
+    test_projection(pc=pc_path, calib=calib_path, img=image_path, save_to='../result/', filter_height=None, show=False, add=True)
 
     # plt_add_pc_to_img(img=image_path, lidar=pixel)
     

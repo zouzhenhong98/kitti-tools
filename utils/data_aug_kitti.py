@@ -225,13 +225,13 @@ def aug_crop(data, saveto, write_image=True):
 
 def aug_brightness(data, saveto, write_image=True):
     #get data
-    img = data['img']
+    img = data['img'].astype('uint8')
     pc = data['pc']
     pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
-    aug1 = RandomBrightness(limit=0.5, p=1)
+    aug1 = RandomBrightness(limit=0.4, p=1)
     aug2 = RandomContrast(p=1)
     img = aug1(image=img)['image']
     img = aug2(image=img)['image']
@@ -284,7 +284,20 @@ def aug_lane_erase(data, saveto, write_image=True):
 
 
 def aug_compose(data, saveto, write_image=True):
-
+    # random lose modal with 20% probability
+    p = np.random.randint(0,10)
+    if p==0:
+        img = data['img']
+        img = np.zeros(img.shape)
+        data['img'] = img
+    elif p==5:
+        pc = data['pc']
+        pc = np.zeros(pc.shape)
+        data['pc'] = pc
+        pc2 = data['pc2']
+        pc2 = np.zeros(pc2.shape)
+        data['pc2'] = pc2
+    
     if (np.random.randint(0,2)):
         data = aug_flip(data=data,saveto=saveto,write_image=False)
     if (np.random.randint(0,2)):
@@ -299,8 +312,6 @@ def aug_compose(data, saveto, write_image=True):
         data = aug_rotate(data=data,saveto=saveto,write_image=False)
     if (np.random.randint(0,2)):
         data = aug_perspective(data=data,saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_lane_erase(data=data, saveto=saveto,write_image=False)
 
     img = data['img']
     pc = data['pc']

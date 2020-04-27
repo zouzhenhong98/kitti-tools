@@ -13,7 +13,7 @@ def aug_rotate(param,saveto):
     aug = ShiftScaleRotate(shift_limit=0.3, 
                         scale_limit=0.3, 
                         rotate_limit=30, 
-                        border_mode=0, 
+                        border_mode=cv2.BORDER_CONSTANT, 
                         p=1)
     augmented = aug(**param)
     image, mask = augmented["image"], augmented["mask"]
@@ -159,10 +159,10 @@ if __name__ == "__main__":
 
     data = {'image': img, 'mask': mask}
     aug_rotate(param=data,saveto=saveto)
-    aug_flip(param=data,saveto=saveto)
-    aug_perspective(param=data,saveto=saveto)
-    aug_noise(param=data,saveto=saveto)
-    aug_crop(param=data,saveto=saveto)
-    aug_brightness(param=data,saveto=saveto)
-    aug_lane_erase(param=data, saveto=saveto)
-    aug_compose(param=data, saveto=saveto)
+    # aug_flip(param=data,saveto=saveto)
+    # aug_perspective(param=data,saveto=saveto)
+    # aug_noise(param=data,saveto=saveto)
+    # aug_crop(param=data,saveto=saveto)
+    # aug_brightness(param=data,saveto=saveto)
+    # aug_lane_erase(param=data, saveto=saveto)
+    # aug_compose(param=data, saveto=saveto)

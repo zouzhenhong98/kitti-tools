@@ -285,7 +285,7 @@ def aug_lane_erase(data, saveto, write_image=True):
 
 def aug_compose(data, saveto, write_image=True):
     # random lose modal with 20% probability
-    p = np.random.randint(0,10)
+    p = np.random.randint(6,10)
     if p==0:
         img = data['img']
         img = np.zeros(img.shape)
@@ -347,12 +347,31 @@ def aug_batch(path_lst, saveto):
         data = {'img': img_data, 'pc': pc_data, \
                 'pc2': pc2_data, 'lane': lane_data, 'road': road_data}
         aug_rotate(data=data,saveto=saveto)
+        aug_rotate(data=data,saveto=saveto)
+
         aug_flip(data=data,saveto=saveto)
+        aug_flip(data=data,saveto=saveto)
+
         aug_perspective(data=data,saveto=saveto)
+
         aug_noise(data=data,saveto=saveto)
+        aug_noise(data=data,saveto=saveto)
+
         aug_crop(data=data,saveto=saveto)
+
         aug_brightness(data=data,saveto=saveto)
-        aug_lane_erase(data=data, saveto=saveto)
+        aug_brightness(data=data,saveto=saveto)
+
+        aug_brightness(data=data,saveto=saveto)
+        aug_brightness(data=data,saveto=saveto)
+
+        aug_compose(data=data, saveto=saveto)
+        aug_compose(data=data, saveto=saveto)
+        aug_compose(data=data, saveto=saveto)
+        aug_compose(data=data, saveto=saveto)
+        aug_compose(data=data, saveto=saveto)
+        aug_compose(data=data, saveto=saveto)
+        aug_compose(data=data, saveto=saveto)
         aug_compose(data=data, saveto=saveto)
 
 

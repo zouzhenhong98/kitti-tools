@@ -1,12 +1,14 @@
-# this code is used for [image,mask,...] group augmentation, DO support multi-image-group data
-# for example, you can process groups like[img,img2,mask,mask2] by modifying the input params and corresponding codes
+# this code is used for [image,mask,...] group augmentation, 
+# DO support multi-image-group data
+# for example, you can process groups like[img,img2,mask,mask2] 
+# by modifying the input params and corresponding codes
 # all based on the albumentation, numpy and opencv module
 
-
-import cv2
 import os
 import time
 import random
+import cv2
+from cv2 import cv2 as cv
 import numpy as np
 from albumentations import RandomBrightness,RandomContrast
 
@@ -32,13 +34,13 @@ def _maybe_process_in_chunks(process_fn, **kwargs):
     return __process_fn
 
 
-def aug_rotate(data, saveto, 
-    angle_limit=30, scale_limit=0.3, shift_limit=0.3, interpolation=cv2.INTER_LINEAR, border_mode=cv2.BORDER_CONSTANT, write_image=True):
+def aug_rotate(data, saveto, name,
+    angle_limit=30, scale_limit=0.3, shift_limit=0.3, interpolation=cv.INTER_LINEAR, \
+        border_mode=cv.BORDER_CONSTANT, write_image=True):
 
     #get data
     img = data['img']
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
@@ -50,66 +52,61 @@ def aug_rotate(data, saveto,
 
     height, width = lane.shape
     center = (width / 2, height / 2)
-    matrix = cv2.getRotationMatrix2D(center, angle, scale)
+    matrix = cv.getRotationMatrix2D(center, angle, scale)
     matrix[0, 2] += dx * width
     matrix[1, 2] += dy * height
 
     warp_affine_fn = _maybe_process_in_chunks(
-        cv2.warpAffine, M=matrix, dsize=(width, height), flags=interpolation, borderMode=border_mode, borderValue=None
+        cv.warpAffine, M=matrix, dsize=(width, height), flags=interpolation, \
+            borderMode=border_mode, borderValue=None
     )
     img = warp_affine_fn(img)
     pc = warp_affine_fn(pc)
-    pc2 = warp_affine_fn(pc2)
     lane = warp_affine_fn(lane)
     road = warp_affine_fn(road)
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_rotate_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_rotate_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_rotate_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_rotate_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_rotate_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_rotate_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_rotate_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_rotate_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_rotate_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
 def hflip(img):
     return np.ascontiguousarray(img[:, ::-1, ...])
 
 
-def hflip_cv2(img):
-    return cv2.flip(img, 1)
+def hflip_cv(img):
+    return cv.flip(img, 1)
 
 
-def aug_flip(data, saveto, write_image=True):
+def aug_flip(data, saveto, name, write_image=True):
     #get data
     img = data['img']
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
-    img = hflip_cv2(img)
-    pc = hflip_cv2(pc)
-    pc2 = hflip(pc2)
+    img = hflip_cv(img)
+    pc = hflip_cv(pc)
     lane = hflip(lane)
     road = hflip(road)
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_flip_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_flip_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_flip_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_flip_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_flip_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_flip_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_flip_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_flip_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_flip_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
-def aug_perspective(data, saveto, write_image=True):
+def aug_perspective(data, saveto, name, write_image=True):
     #get data
     img = data['img']
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
@@ -121,31 +118,29 @@ def aug_perspective(data, saveto, write_image=True):
     h4,w4 = np.random.randint(h-int(h/3),h-50), np.random.randint(w-int(w/4),w-100)
     pts1 = np.float32([[w1, h1], [w2, h2], [w4, h4], [w3, h3]])
     pts2 = np.float32([[0, 0], [0, h-1], [w-1, h-1], [w-1, 0]])
-    M = cv2.getPerspectiveTransform(pts1, pts2)
+    M = cv.getPerspectiveTransform(pts1, pts2)
 
-    img = cv2.warpPerspective(img, M, (w,h))
-    pc = cv2.warpPerspective(pc, M, (w,h))
-    pc2 = cv2.warpPerspective(pc2, M, (w,h))
-    lane = cv2.warpPerspective(lane, M, (w,h))
-    road = cv2.warpPerspective(road, M, (w,h))
+    img = cv.warpPerspective(img, M, (w,h))
+    pc = cv.warpPerspective(pc, M, (w,h))
+    lane = cv.warpPerspective(lane, M, (w,h))
+    road = cv.warpPerspective(road, M, (w,h))
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_perspective_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_perspective_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_perspective_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_perspective_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_perspective_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_perspective_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_perspective_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_perspective_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_perspective_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
-def downscale(img, scale, interpolation=cv2.INTER_NEAREST):
+def downscale(img, scale, interpolation=cv.INTER_NEAREST):
     h, w = img.shape[:2]
-    need_cast = interpolation != cv2.INTER_NEAREST and img.dtype == np.uint8
+    need_cast = interpolation != cv.INTER_NEAREST and img.dtype == np.uint8
     if need_cast:
         img = to_float(img)
-    downscaled = cv2.resize(img, None, fx=scale, fy=scale, interpolation=interpolation)
-    upscaled = cv2.resize(downscaled, (w, h), interpolation=interpolation)
+    downscaled = cv.resize(img, None, fx=scale, fy=scale, interpolation=interpolation)
+    upscaled = cv.resize(downscaled, (w, h), interpolation=interpolation)
     if need_cast:
         upscaled = from_float(np.clip(upscaled, 0, 1), dtype=np.dtype("uint8"))
     return upscaled
@@ -160,11 +155,10 @@ def gauss_noise(image, var_limit=(30.0, 50.0), mean=0):
     return image + gauss
 
 
-def aug_noise(data, saveto, scale_min=0.25, scale_max=0.5, write_image=True):
+def aug_noise(data, saveto, name, scale_min=0.25, scale_max=0.5, write_image=True):
     #get data
     img = data['img']
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
@@ -172,15 +166,16 @@ def aug_noise(data, saveto, scale_min=0.25, scale_max=0.5, write_image=True):
     img = gauss_noise(img)
     if np.random.randint(0,2):
         img = downscale(img, scale=random.uniform(scale_min,scale_max))
+    else:
+        pc = downscale(pc, scale=random.uniform(scale_min,scale_max))
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_noise_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_noise_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_noise_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_noise_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_noise_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_noise_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_noise_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_noise_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_noise_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
 def crop_array(data,h1,h2,w1,w2,channels):
@@ -192,16 +187,15 @@ def crop_array(data,h1,h2,w1,w2,channels):
     return result
 
 
-def aug_crop(data, saveto, write_image=True):
+def aug_crop(data, saveto, name, write_image=True):
     #get data
     img = data['img']
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
     #get crop coordinate
-    height_limit, width_limit = pc2.shape
+    height_limit, width_limit = pc.shape[0], pc.shape[1] 
     h_crop_min = np.random.randint(100, height_limit-150)
     h_crop_max = np.random.randint(max(h_crop_min+100,200), height_limit)
     w_crop_min = np.random.randint(0, width_limit-500)
@@ -209,25 +203,22 @@ def aug_crop(data, saveto, write_image=True):
 
     img = crop_array(img, h_crop_min, h_crop_max, w_crop_min, w_crop_max, 3)
     pc = crop_array(pc, h_crop_min, h_crop_max, w_crop_min, w_crop_max, 3)
-    pc2 = crop_array(pc2, h_crop_min, h_crop_max, w_crop_min, w_crop_max, 1)
     lane = crop_array(lane, h_crop_min, h_crop_max, w_crop_min, w_crop_max, 1)
     road = crop_array(road, h_crop_min, h_crop_max, w_crop_min, w_crop_max, 1)
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_crop_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_crop_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_crop_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_crop_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_crop_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_crop_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_crop_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_crop_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_crop_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
-def aug_brightness(data, saveto, write_image=True):
+def aug_brightness(data, saveto, name, write_image=True):
     #get data
     img = data['img'].astype('uint8')
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
 
@@ -237,20 +228,18 @@ def aug_brightness(data, saveto, write_image=True):
     img = aug2(image=img)['image']
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_brightness_contrast_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_brightness_contrast_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_brightness_contrast_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_brightness_contrast_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_brightness_contrast_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_brightness_contrast_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_brightness_contrast_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_brightness_contrast_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_brightness_contrast_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
-def aug_lane_erase(data, saveto, write_image=True):
+def aug_lane_erase(data, saveto, name, write_image=True):
     #get data
     img = data['img']
     pc = data['pc']
-    pc2 = data['pc2']
     lane = data['lane']
     road = data['road']
     
@@ -263,7 +252,8 @@ def aug_lane_erase(data, saveto, write_image=True):
     if len(index)>1: # ensure the label is not empty
         x,y = index[np.random.randint(1,len(index))]
         #agjust exposure based on images 
-        gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+        img = img.astype(np.float32)
+        gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
         if gray.mean()<0.5: #dark img
             color = np.random.randint(0,50)
         else: #light img
@@ -274,120 +264,168 @@ def aug_lane_erase(data, saveto, write_image=True):
             img[x-radius:x+radius, y-radius:y+radius, ch] = color
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_erase_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_erase_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_erase_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_erase_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_erase_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_erase_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_erase_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_erase_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_erase_road.png'),road)
     else:
-        return {'img': img.astype("float32"), 'pc': pc, 'pc2': pc2, 'lane': lane, 'road': road}
+        return {'img': img.astype("float32"), 'pc': pc, 'lane': lane, 'road': road}
 
 
-def aug_compose(data, saveto, write_image=True):
-    # random lose modal with 20% probability
+def aug_compose(data, saveto, name, write_image=True):
+    # random lose modal with 10% probability
     p = np.random.randint(0,10)
+    img, pc = data['img'], data['pc']
     if p==0:
-        img = data['img']
+        #img = data['img']
         img = np.zeros(img.shape)
-        data['img'] = img
-    elif p==5:
-        pc = data['pc']
+        #data['img'] = img
+    else:
+        #pc = data['pc']
         pc = np.zeros(pc.shape)
-        data['pc'] = pc
-        pc2 = data['pc2']
-        pc2 = np.zeros(pc2.shape)
-        data['pc2'] = pc2
-    
-    if (np.random.randint(0,2)):
-        data = aug_flip(data=data,saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_noise(data=data,saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_brightness(data=data,saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_crop(data=data,saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_lane_erase(data=data, saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_rotate(data=data,saveto=saveto,write_image=False)
-    if (np.random.randint(0,2)):
-        data = aug_perspective(data=data,saveto=saveto,write_image=False)
+        #data['pc'] = pc
+    flag = 0
+    if np.random.randint(0,2):
+        _data = aug_flip(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
+    if np.random.randint(0,2):
+        _data = aug_noise(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
+    if np.random.randint(0,2):
+        _data = aug_brightness(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
+    if np.random.randint(0,2):
+        _data = aug_crop(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
+    if np.random.randint(0,2):
+        _data = aug_lane_erase(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
+    if np.random.randint(0,2):
+        _data = aug_rotate(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
+    if np.random.randint(0,2):
+        _data = aug_perspective(data=data,saveto=saveto,name=name,write_image=False)
+        flag = 1
 
-    img = data['img']
-    pc = data['pc']
-    pc2 = data['pc2']
-    lane = data['lane']
-    road = data['road']
+    if flag:
+        img = _data['img']
+        pc = _data['pc']
+        lane = _data['lane']
+        road = _data['road']
+    else:
+        lane = data['lane']
+        road = data['road']
 
     if write_image:
-        cv2.imwrite(os.path.join(saveto,'aug_compose_img.png'),img)
-        cv2.imwrite(os.path.join(saveto,'aug_compose_pc.png'),pc)
-        cv2.imwrite(os.path.join(saveto,'aug_compose_pc2.png'),pc2)
-        cv2.imwrite(os.path.join(saveto,'aug_compose_lane.png'),lane)
-        cv2.imwrite(os.path.join(saveto,'aug_compose_road.png'),road)
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_compose_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_compose_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_compose_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_compose_road.png'),road)
     else:
         return data
 
+def aug_drop(data, modal, saveto, name, write_image=True):
+    '''
+    drop modality
+    '''
 
-def aug_batch(path_lst, saveto):
-    PATH = [] #img,pc,pc2,lane,road
+    img = data['img']
+    pc = data['pc']
+    lane = data['lane']
+    road = data['road']
+
+    if modal=='image':
+        #img = data['img']
+        img = np.zeros(img.shape)
+        #data['img'] = img
+    elif modal=='point':
+        #pc = data['pc']
+        pc = np.zeros(pc.shape)
+        #data['pc'] = pc
+
+    if write_image:
+        cv.imwrite(os.path.join(saveto,'train_image_2_lane',name+'_aug_drop_img.png'),img)
+        cv.imwrite(os.path.join(saveto,'knn_pc',name+'_aug_drop_pc.png'),pc)
+        cv.imwrite(os.path.join(saveto,'lane_label',name+'_aug_drop_lane.png'),lane)
+        cv.imwrite(os.path.join(saveto,'road_label',name+'_aug_drop_road.png'),road)
+    else:
+        return data
+
+def aug_batch(path_lst, saveto_path):
+    PATH = [] #img,pc,lane,road
 
     for path in path_lst: #rank files
-        files =os.listdir(path)
+        files = os.listdir(path)
         files.sort()
         PATH.append(files)
+    tmp_PATH = np.array(PATH)
+    print(tmp_PATH.shape)
+    i = 0
+    for img,pc,lane,road in zip(PATH[0],PATH[1],PATH[2],PATH[3]):
+        i+=1
+        if i<300:
+            saveto = saveto_path+'train/'
+        else:
+            saveto = saveto_path+'val/'
+        print('-'*20+'processing data '+str(i)+'/383'+'-'*20)
+        print(img,pc,lane,road)
+        if os.path.exists(os.path.join('./aug/train_image_2_lane/',img[:-4],'_pc_aug_drop_img.png')):
+            print('exist')
+            pass
+        else:
+            start_time = time.perf_counter()
+            data_name = img[:-4]
+            img_data = cv.imread(path_lst[0]+img)
+            pc_data = cv.imread(path_lst[1]+pc)
+            lane_data = cv.imread(path_lst[2]+lane,cv.IMREAD_GRAYSCALE)
+            road_data = cv.imread(path_lst[3]+road,cv.IMREAD_GRAYSCALE)
 
-    for img,pc,pc2,lane,road in zip(PATH[0],PATH[1],PATH[2],PATH[3],PATH[4]):
-        img_data = cv2.imread(img)
-        pc_data = cv2.imread(pc)
-        pc2_data = cv2.imread(pc2,cv2.IMREAD_GRAYSCALE)
-        lane_data = cv2.imread(lane,cv2.IMREAD_GRAYSCALE)
-        road_data = cv2.imread(road,cv2.IMREAD_GRAYSCALE)
+            data = {'img': img_data, 'pc': pc_data, \
+                    'lane': lane_data, 'road': road_data}
+            aug_rotate(data=data,saveto=saveto, name=data_name+'_0')
+            #aug_rotate(data=data,saveto=saveto, name=data_name+'_1')
 
-        data = {'img': img_data, 'pc': pc_data, \
-                'pc2': pc2_data, 'lane': lane_data, 'road': road_data}
-        aug_rotate(data=data,saveto=saveto)
-        aug_flip(data=data,saveto=saveto)
-        aug_perspective(data=data,saveto=saveto)
-        aug_noise(data=data,saveto=saveto)
-        aug_crop(data=data,saveto=saveto)
-        aug_brightness(data=data,saveto=saveto)
-        aug_lane_erase(data=data, saveto=saveto)
-        aug_compose(data=data, saveto=saveto)
+            aug_flip(data=data,saveto=saveto, name=data_name+'_0')
+            #aug_flip(data=data,saveto=saveto, name=data_name+'_1')
 
+            aug_perspective(data=data,saveto=saveto, name=data_name+'_0')
+
+            aug_noise(data=data,saveto=saveto, name=data_name+'_0')
+            #aug_noise(data=data,saveto=saveto, name=data_name+'_1')
+
+            aug_crop(data=data,saveto=saveto, name=data_name+'_0')
+
+            aug_brightness(data=data,saveto=saveto, name=data_name+'_0')
+            #aug_brightness(data=data,saveto=saveto, name=data_name+'_1')
+
+            #aug_lane_erase(data=data,saveto=saveto, name=data_name+'_0')
+            #aug_lane_erase(data=data,saveto=saveto, name=data_name+'_1')
+
+            aug_compose(data=data, saveto=saveto, name=data_name+'_0')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_1')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_2')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_3')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_4')
+            '''
+            aug_compose(data=data, saveto=saveto, name=data_name+'_5')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_6')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_7')
+            aug_compose(data=data, saveto=saveto, name=data_name+'_8')
+            '''
+            aug_drop(data=data, modal='image', saveto=saveto, name=data_name+'_img')
+            aug_drop(data=data, modal='point', saveto=saveto, name=data_name+'_pc')
+            print('time used:%.3f'%(time.perf_counter()-start_time),'seconds')
+            #break
 
 
 if __name__ == "__main__":
-    img_path = '../data/img/um_000000.png'
-    img_path2 = '../data/img/um_000006.png'
-    label_path = '../data/label/lane/1.png'
-    saveto = '../result/aug_kitti'
-    start0 =time.clock()
-    img = cv2.imread(img_path)
-    pc = cv2.imread(img_path2)
-    pc2 = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    lane = cv2.imread(label_path,cv2.IMREAD_GRAYSCALE)
-    road = cv2.imread(img_path2,cv2.IMREAD_GRAYSCALE)
+    
+    path_img = './train_image_2_lane/'
+    path_pc = './knn_pc/'
+    path_lane = './lane_label/'
+    path_road = './road_label/'
+    path_lst = [path_img, path_pc, path_lane, path_road]
+    saveto = './aug/'
+    aug_batch(path_lst=path_lst, saveto_path=saveto)
 
-    # test speed
-    data = {'img': img, 'pc': pc, \
-            'pc2': pc2, 'lane': lane, 'road': road}
-    start1 = time.clock()
-    aug_rotate(data=data,saveto=saveto)
-    start2 = time.clock()
-    aug_flip(data=data,saveto=saveto)
-    start3 = time.clock()
-    aug_perspective(data=data,saveto=saveto)
-    start4 = time.clock()
-    aug_noise(data=data,saveto=saveto)
-    start5 = time.clock()
-    aug_crop(data=data,saveto=saveto)
-    start6 = time.clock()
-    aug_brightness(data=data,saveto=saveto)
-    start7 = time.clock()
-    aug_lane_erase(data=data, saveto=saveto)
-    start8 = time.clock()
-    aug_compose(data=data, saveto=saveto)
-    start9 = time.clock()
-    print(start9-start8,start8-start7,start7-start6,start6-start5,start5-start4,start4-start3,start3-start2,start2-start1,start1-start0)
-    # around 1.3 seconds to conduct process above, using single i5-8250U core
+

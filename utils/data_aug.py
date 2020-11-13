@@ -1,7 +1,7 @@
 # this code is used for [image,mask] pair augmentation, do not support multi-image-pair
 
 
-import cv2
+from cv2 import cv2
 import os
 import numpy as np
 from  albumentations3  import (

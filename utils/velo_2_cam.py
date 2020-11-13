@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mayavi.mlab
 from utils import data_provider
-from utils import show_lidar
+#from utils import show_lidar
 from utils import config
 #import pcl
 import cv2
@@ -233,7 +233,7 @@ def lidar_to_camera_project(trans_mat,
     parameters:
         trans_mat: from lidar-view to camera-view
         rec_mat: rectify camera-view
-        cam_mat: from camera-view to pixelslidar_to_camera_project
+        cam_mat: from camera-view to pixels lidar_to_camera_project
         data: use data_provider.read_pc2array() for preprocess
         pixel_range: tuple, the x,y axis range of pixel of image
     output:

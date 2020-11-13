@@ -4,63 +4,65 @@ import cv2
 import os
 import numpy as np
 
-img_pred = '/media/txxzzh/B2D21A09D219D309/Automobile_THU/dataset/kitti-lanes/SCNN-kitti'
-img_gt = '../data/label/lane/5.png'
-
 # evaluate the accuracy between pred and gt, using F1-score
 def f1(pred, gt):
     pred = cv2.imread(pred,cv2.IMREAD_GRAYSCALE)
     gt = cv2.imread(gt,cv2.IMREAD_GRAYSCALE)
     # resize
-    h,w = gt.shape[:2]
+    h,w = gt.shape
     pred = cv2.resize(pred, (w, h), interpolation=cv2.INTER_NEAREST)
     # normalization
-    #gt = gt/255
-    pred = pred/255
     np.putmask(gt, gt>0, 1.0)
-    np.putmask(pred, pred>0, 1.0)
-    # np.putmask(pred, pred, 0.0)
-    # # indices
+    np.putmask(pred, pred>=0.5, 1.0)
+    np.putmask(pred, pred<0.5, 0)
+    # indices
     total = h*w
-    gt_lane = np.count_nonzero(gt)
-    pred_lane = np.count_nonzero(pred)
-    correct_lane = np.count_nonzero(np.multiply(gt,pred))
-    
-    precise = np.divide(correct_lane,pred_lane)
-    recall = np.divide(correct_lane,gt_lane)
-    if recall==0:
-        F1 = 0
+    result = gt*2 + pred
+    tn,fp,fn,tp = np.bincount(result)
+    # outliers
+    if tp+fp==0:
+        if fn==0:
+            precise = 1
+        else:
+            precise = 0.5
     else:
-        F1 = np.divide(2*precise*recall,precise+recall)
+        precise = np.divide(tp,tp+fp)
 
-    return precise, recall, F1, correct_lane
+    if tp+fn==0:
+        if fp==0:
+            recall = 1
+        else:
+            recall = 0.5
+        balance_acc = tn / total
+    else:
+        recall = np.divide(tp,tp+fn)
+        balance_acc = 2*tp*tn + fn*tn + fp*tp
+
+    F1 = np.divide(2*precise*recall,precise+recall)
+
+    return precise, recall, F1, balance_acc
 
 
-def f1_batch(lst):
-    PRED = []
-    GT = []
+def f1_batch(pred_path, gt_path):
+    path_lst = (pred_path, gt_path)
+    PATH = []
+    for path in path_lst: #rank files
+        files = os.listdir(path)
+        files.sort()
+        PATH.append(files)
+
     precise = []
     recall = []
     F1 = []
-    cl = []
-    with open(lst) as f:
-        content = f.readlines()
-        for c in content:
-            if c[:9]=='orig_test':
-                PRED.append('data/pred/' + c[:-1])
-                GT.append('data/lane_binary/' + c[:10]+'lane_b_'+c[10:-1])
-            else:
-                PRED.append('data/pred/' + c[:-1])
-                GT.append('data/lane_binary/' + c[:11]+'lane_b_'+c[11:-1])
-
-    for i in range(len(PRED)):    
-        p, r, f, CL= f1(PRED[i],GT[i])
+    Bacc = []
+    for pred,gt in zip(PATH[0],PATH[1]):
+        p, r, f, b = f1(pred,gt)
         precise.append(p)
         recall.append(r)
         F1.append(f)
-        cl.append(CL)
+        Bacc.append(b)
 
-    return np.mean(precise), np.mean(recall), np.mean(F1)
+    return np.mean(precise), np.mean(recall), np.mean(F1), np.mean(Bacc)
 
 
 # create a index txt for files under the path
@@ -121,10 +123,10 @@ def add_img(raw, label):
 
 
 if __name__ == "__main__":
-    create_list('data/pred/')
-    p,r,f = f1_batch('list.txt')
-    print('precise: %.3f\nrecall: %.3f\nf1-score: %.3f' % (p, r, f))
-    overaly_batch('list.txt')
+    #create_list('data/pred/')
+    p,r,f,b = f1_batch()
+    print('precise: %.3f\nrecall: %.3f\nf1-score: %.3f\nb-acc: %.3f' % (p, r, f, b))
+    #overaly_batch('list.txt')
     # overlay('data/lane_binary/orig_test_lane_b_um_000029.png','data/train/orig_test_um_000029.png','data/overlay/29.png')
     # add_img('/media/txxzzh/B2D21A09D219D309/Automobile_THU/dataset/kitti-lanes/data_road/testing/image_2/um_000029.png','data/overlay/29.png')
-    overaly_batch_bl(path_o='data/baseline/label/')
+    #overaly_batch_bl(path_o='data/baseline/label/')

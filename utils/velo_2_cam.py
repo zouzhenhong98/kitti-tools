@@ -6,18 +6,20 @@ import mayavi.mlab
 from utils import data_provider
 #from utils import show_lidar
 from utils import config
+import multiprocessing
 #import pcl
 import cv2
 
-#TODO: fix input to lidar_to_2d_front_view()
+"""
+we implement three methods to conduct points projection onto images
+-   lidar_to_2d_front_view: directly project without calibrating images
+-   show_pixels: directly plot with plt
+-   add_pc_to_img: add points to images with CV with calibration
+-   plt_add_pc_to_img: code with bugs, DO NOT USE IT
+-   circle_plot: plot points with CV as circles with calibration
+we recommend using circle_plot
+"""
 
-# project lidar to camera-view image
-'''
-numpy anglr is mearsured by pi rather than 360
-TODO: 
-    calibrate the lidar image with camera image
-    fit the dpi problem
-'''
 
 # directly project pointclouds to 2d font-view without calibration
 def lidar_to_2d_front_view(points,
@@ -141,7 +143,63 @@ def show_pixels(coor, saveto):
     ax.xaxis.set_visible(False)    # Do not draw axis tick marks
     ax.yaxis.set_visible(False)    # Do not draw axis tick marks
     fig.savefig(saveto, dpi=dpi, bbox_inches='tight', pad_inches=0.0)
-    print("image saved\n") 
+    print("image saved\n")
+    
+    
+# new function to plot points
+def circle_plot(pts_file, save_path):
+    gray0 = np.zeros((375, 1242), dtype=np.uint8)
+    gray0 = cv2.cvtColor(gray0, cv2.COLOR_BGR2RGB)
+    cmap = plt.cm.get_cmap('hsv', 256)
+    cmap = np.array([cmap(i) for i in range(256)])[:, :3] * 255
+    print(pts_file[3,:].max(),pts_file[3,:].min())
+    for i in range(pts_file.shape[1]):
+        color = pts_file[3, i]
+        #color = cmap[int(640.0 / depth), :]
+        #temp = int(640.0 / color)
+        temp = int(200 / (color+1))
+        if temp >= 256:
+            temp = 255
+        elif temp <0:
+            temp = 0
+        color = cmap[temp, :]
+        cv2.circle(gray0, (int(np.round(pts_file[0, i])),
+                         int(np.round(pts_file[1, i]))),
+                        2, color=tuple(color), thickness=-1)
+    print(color.max(),color.min())
+    print(gray0.shape)
+    gray0 = cv2.cvtColor(gray0, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(save_path, gray0)
+    
+    
+# using circle_plot in batches
+def project_batch(pts_path, calib_lst):
+    DATA_PATH = os.path.join(pts_path,'data/')
+    SAVE_PATH = os.path.join(pts_path,'projection/')
+    #a,b,files = os.walk(pts_path)
+    #print(len(files))
+    for root, folder, files in os.walk(DATA_PATH):
+        files = sorted(files)
+        for f in files:
+            if os.path.exists(os.path.join(SAVE_PATH,f[:-3]+'png')):
+                continue
+            lidar = data_provider.read_pc2array(os.path.join(root,f), 
+                                                height=None,
+                                                font=True)
+            lidar = np.array(lidar)
+            cam_coor, pixel = lidar_to_camera_project(trans_mat=calib_lst[2], 
+                                                    rec_mat=calib_lst[1], 
+                                                    cam_mat=calib_lst[0], 
+                                                    data=lidar, 
+                                                    pixel_range=(1242,375)
+                                                    )
+            print(os.path.join(SAVE_PATH,f[:-3]+'png'))
+            circle_plot(pts_file=pixel, save_path=os.path.join(SAVE_PATH,f[:-3]+'png'))
+            if os.path.exists(os.path.join(SAVE_PATH,f)):
+                pass
+            else:
+                print("fail one file {}".format(f))
+
 
 
 # add projected lidar to image and save
@@ -351,12 +409,14 @@ if __name__ == "__main__":
     fil.set_std_dev_mul_thresh (1.0)
     fil.filter().to_file("inliers.pcd")
     '''
-
+    
+    '''using add_pc_to_img and show_pixels
     test_projection(pc=pc_path, calib=calib_path, img=image_path, save_to='../result/', filter_height=None, show=False, add=True)
-
+    '''
+    
     # plt_add_pc_to_img(img=image_path, lidar=pixel)
     
-    '''
+    '''using lidar_to_2d_front_view
     # direct projection
     lidar_to_2d_front_view(lidar, v_res=VRES, h_res=HRES, v_fov=VFOV, \
         val="depth", saveto="../result/"+filename+"_depth.png", y_fudge=Y_FUDGE)
@@ -368,3 +428,12 @@ if __name__ == "__main__":
         val="reflectance", saveto="../result/"+filename+"_reflectance.png", y_fudge=Y_FUDGE)
     '''
 
+    '''using circle_plot
+    PATH_pts1 = '2011_09_26_drive_0028_sync/velodyne_points/'
+    PATH_pts2 = '2011_09_26_drive_0029_sync/velodyne_points/'
+
+    p1 = multiprocessing.Process(target=project_batch, args=(PATH_pts1,[cam2img,cam2cam,vel2cam]))
+    p2 = multiprocessing.Process(target=project_batch, args=(PATH_pts2,[cam2img,cam2cam,vel2cam]))
+    p1.start()
+    p2.start()
+    '''
